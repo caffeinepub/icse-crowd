@@ -1,0 +1,46 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-03T11:40:27.117Z",
+  "summary": "HomePage.tsx adds clipboard-copy logic for the contact email and uses toast notifications, but the diff excerpt does not show the new bottom section JSX nor the required mailto link; additional unrelated documentation/state summary files were updated.",
+  "missing_requirements": [
+    {
+      "id": "REQ-7",
+      "requirement": "Add a new final section at the very bottom of the Home page after all existing sections that displays: \"FOR INQUIRIES & ADVERTISING: aryananilshinde6122009@gmail.com\".",
+      "reason": "The provided HomePage.tsx diff is truncated before any new bottom/final section is shown; the excerpt only shows existing hero/features sections and helper logic, not the required final callout section or its exact label text.",
+      "evidence": [
+        "frontend/src/pages/HomePage.tsx (truncated excerpt does not include the final section JSX)"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "requirement": "Render the email address as a clickable mailto link and provide a copy-to-clipboard affordance with success/failure communicated via existing toast patterns.",
+      "reason": "Copy-to-clipboard logic and toast feedback are present, but the diff excerpt does not show any UI affordance (button/icon) nor a mailto anchor/link being rendered.",
+      "evidence": [
+        "frontend/src/pages/HomePage.tsx (shows handleCopyEmail + toast, but no mailto/link JSX in excerpt)"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Updates to frontend-file-summaries.txt describing many unrelated component/page changes (e.g., updated useQueries attachments support, Header branding changes, theme changes, etc.).",
+      "reason": "The BuildRequest is limited to adding an inquiries/advertising contact section on the Home page UI only; these additional described changes are not requested. The only actual code diff shown is HomePage.tsx; the other changes appear as documentation/summary updates.",
+      "evidence": [
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Project state/version summary update unrelated to adding a Home page contact section.",
+      "reason": "Not requested by the BuildRequest (Home page UI only).",
+      "evidence": [
+        "project_state.json (truncated)"
+      ]
+    }
+  ],
+  "confidence": 0.62,
+  "changed_files": [
+    "frontend-file-summaries.txt",
+    "frontend/src/pages/HomePage.tsx",
+    "project_state.json"
+  ]
+}

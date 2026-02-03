@@ -1,0 +1,39 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Home page inquiries & advertising contact callout",
+  "requirements": [
+    {
+      "id": "REQ-7",
+      "summary": "Add a final bottom section on the Home page showing the inquiries/advertising email callout text.",
+      "acceptanceCriteria": [
+        "The Home page contains a new last section rendered after the current final CTA section (or after the last section when authenticated).",
+        "The section includes the exact email text: aryananilshinde6122009@gmail.com.",
+        "The section uses English user-facing text and clearly labels the email as being for inquiries & advertising."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/HomePage.tsx",
+          "operation": "modify",
+          "description": "Append a new final bottom section after the existing CTA (and after all other sections) that displays the inquiries/advertising label text and the exact email address content. Use existing styling patterns (Tailwind + shadcn composed components) without modifying files under frontend/src/components/ui. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Make the email a clickable mailto link and add a copy-to-clipboard action with toast feedback.",
+      "acceptanceCriteria": [
+        "Clicking the email opens the user’s default mail client via a mailto link.",
+        "A copy action is available and copies \"aryananilshinde6122009@gmail.com\" to the clipboard.",
+        "Copy success/failure is communicated using the app’s existing toast/feedback patterns."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/HomePage.tsx",
+          "operation": "modify",
+          "description": "Render the email as a mailto anchor (mailto:aryananilshinde6122009@gmail.com) and add a copy-to-clipboard affordance that calls navigator.clipboard.writeText with success/error communicated via the existing sonner toast pattern used elsewhere in the app. Use composed shadcn components (e.g., Button) without editing frontend/src/components/ui. Verify the component's usage instructions before implementing."
+        }
+      ]
+    }
+  ]
+}

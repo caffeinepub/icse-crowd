@@ -1,0 +1,15 @@
+{
+  "frontend/src/App.tsx": "Main application component with page navigation, authentication state management, profile setup modal, and theme provider integration.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including updated useCreatePost mutation that accepts image, video, and document ExternalBlob attachments.",
+  "frontend/src/components/Header.tsx": "Navigation header with updated branding \"ICSE Crowd\", logo, menu items, user authentication controls, and responsive mobile menu.",
+  "frontend/src/components/Footer.tsx": "Footer component with copyright notice, caffeine.ai attribution, and developer credit \"Developed by Aryan Shinde\".",
+  "frontend/src/components/ProfileSetupModal.tsx": "Modal dialog for first-time user profile creation with name, email, and academic details fields.",
+  "frontend/src/pages/HomePage.tsx": "Landing page with hero section, feature cards, collaboration showcase, call-to-action sections, and a final inquiries & advertising contact section with mailto link and copy-to-clipboard functionality.",
+  "frontend/src/pages/FeedPage.tsx": "Social feed page with post creation supporting text, images, videos, and documents with individual upload progress tracking, and feed display rendering all attachment types appropriately.",
+  "frontend/src/pages/StudyGroupsPage.tsx": "Study groups page with group creation dialog and placeholder for future group listings.",
+  "frontend/src/pages/ForumPage.tsx": "Q&A forum page with question posting dialog and placeholder for future forum posts.",
+  "frontend/src/pages/ChatPage.tsx": "Chat interface with contact list, message composition, and conversation view.",
+  "frontend/src/pages/ModerationPage.tsx": "Admin moderation dashboard with report management using proper enum comparison for report status filtering and updates.",
+  "frontend/src/index.css": "Global styles with OKLCH color system featuring red/white primary colors (hue 15) for both light and dark modes, replacing the previous purple/blue theme.",
+  "frontend/index.html": "HTML entry point with updated page title \"ICSE Crowd\" and meta tags."
+}

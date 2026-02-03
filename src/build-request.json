@@ -1,0 +1,56 @@
+{
+  "kind": "build_request",
+  "title": "Add inquiries & advertising contact section to the bottom of the Home page",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-7",
+      "text": "Add a new final section at the very bottom of the Home page (frontend/src/pages/HomePage.tsx), after all existing sections, that displays an inquiries/advertising contact callout matching the content shown in the provided image: \"FOR INQUIRIES & ADVERTISING: aryananilshinde6122009@gmail.com\".",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-5"
+        ],
+        "quotes": [
+          "Add this at last on the home page"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The Home page contains a new last section rendered after the current final CTA section (or after the last section when authenticated).",
+        "The section includes the exact email text: aryananilshinde6122009@gmail.com.",
+        "The section uses English user-facing text and clearly labels the email as being for inquiries & advertising."
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "In the new Home page bottom section, render the email address as a clickable mailto link (mailto:aryananilshinde6122009@gmail.com) and provide a simple UI affordance to copy the email to clipboard.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-5"
+        ],
+        "quotes": [
+          "Add this at last on the home page"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Clicking the email opens the user’s default mail client via a mailto link.",
+        "A copy action is available and copies \"aryananilshinde6122009@gmail.com\" to the clipboard.",
+        "Copy success/failure is communicated using the app’s existing toast/feedback patterns."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify files under frontend/src/components/ui (shadcn components must be composed, not edited).",
+    "Do not change backend code; this change is Home page UI only.",
+    "Use English for all user-facing text."
+  ],
+  "nonGoals": [
+    "Do not add or change authentication behavior.",
+    "Do not add a new backend endpoint or persistence for contact/inquiry messages."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}
