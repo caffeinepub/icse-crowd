@@ -281,7 +281,6 @@ actor {
   };
 
   public shared ({ caller }) func createPost(content : Text, image : ?Storage.ExternalBlob, video : ?Storage.ExternalBlob, document : ?Storage.ExternalBlob) : async () {
-    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create posts");
     };
@@ -321,7 +320,6 @@ actor {
   };
 
   public shared ({ caller }) func addComment(postId : Nat, content : Text) : async () {
-    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can add comments");
     };
@@ -340,9 +338,8 @@ actor {
   };
 
   public shared ({ caller }) func getFeed() : async [Post] {
-    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view feed");
+      Runtime.trap("Unauthorized: Only users can view the feed");
     };
     posts.values().toArray().sort();
   };

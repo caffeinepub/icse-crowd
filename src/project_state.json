@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 43,
+  "projectStateVersion": 51,
   "summary": "ICSE Crowd is a full-stack Internet Computer (ICP) dapp: a social + academic collaboration platform for ICSE students. The frontend is a React/Tailwind app using Internet Identity for authentication and TanStack React Query for data fetching. The backend is a Motoko canister that provides role-based access control (admin/user/guest), user profiles, a social feed (posts with optional images, likes, comments), basic friend requests, direct messaging, study groups and shared notes, a simple forum posting feature, and a moderation/reporting system (reports, status workflow, admin deletions). The project also includes a Caffeine blob-storage mixin for handling externally stored blobs, gateway authorization, and storage maintenance endpoints.",
   "architectural_notes": [
     "Frontend uses React with a global InternetIdentityProvider (AuthClient) context to manage identity, login/logout, and persisted sessions.",
@@ -21,11 +21,11 @@
     "Comments can be added but are not retrievable/displayed: backend stores comments, but feed retrieval returns only posts; no getCommentsByPost API exists and UI does not render comments.",
     "ID generation uses Time.now().toNat() and may collide under rapid successive operations (multiple events within the same timestamp granularity).",
     "Backend maps are defined as non-stable in-memory structures; without stable variables/upgrade hooks, data likely will not persist across canister upgrades.",
-    "Some hooks/pages imply features without UI wiring (reporting/blocking from user perspective, role assignment); admin role assignment exists in backend but no frontend hook/UI is provided.",
     "Authentication/login issue: clicking Sign In has a long delay before failing with an authentication error (Internet Identity flow suspected/misconfigured).",
-    "Authentication/login issue detail update: Sign In delay occurs every time; after the delay an authentication error message appears consistently."
+    "Authentication/login issue detail update: Sign In delay occurs every time; after the delay an authentication error message appears consistently.",
+    "Username display is still incorrect: posts/comments are not consistently showing the author’s profile display name (set during profile creation)."
   ],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "existing_features": [
     {
       "id": "IF-1",
@@ -300,6 +300,70 @@
         "REQ-13"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-fix-the-feed-ui-so-that-author-names-for-both-posts-and-comments-reliably-display-the-profile-display-name-the-name-saved-at-profile-creation-time-instead-of-showing-principals-placeholders-due-to-principal-type-conversion-issues",
+      "title": "Fix the feed UI so that author names for both posts and comments reliably display the profile display name (the name saved at profile creation time) instead of showing principals/placeholders due to principal type/conversion issues.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-authenticated-home-page-to-show-a-full-width-or-prominent-create-profile-button-only-when-the-signed-in-user-does-not-have-a-profile-and-hide-disable-post-creation-on-home-when-the-profile-is-missing",
+      "title": "Update the authenticated Home page to show a full-width (or prominent) \"Create Profile\" button only when the signed-in user does not have a profile, and hide/disable post creation on Home when the profile is missing.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-new-modified-profile-creation-flow-launched-from-the-home-page-create-profile-button-do-not-navigate-to-open-an-existing-separate-profile-creation-page-reuse-the-existing-profile-fields-name-email-academic-details-and-call-the-existing-createuserprofile-name-email-academicdetails-backend-method",
+      "title": "Implement a new/modified profile-creation flow launched from the Home page Create Profile button (do not navigate to/open an existing separate profile-creation page). Reuse the existing profile fields (name, email, academic details) and call the existing `createUserProfile(name, email, academicDetails)` backend method.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-adjust-the-app-level-gating-so-users-with-no-profile-are-not-forced-into-an-auto-opening-profile-modal-that-blocks-the-home-page-instead-allow-the-home-page-to-render-and-let-the-user-initiate-profile-creation-via-the-home-page-button",
+      "title": "Adjust the app-level gating so users with no profile are not forced into an auto-opening profile modal that blocks the Home page; instead, allow the Home page to render and let the user initiate profile creation via the Home page button.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-authenticated-home-page-so-that-when-the-signed-in-user-does-not-have-a-profile-a-centered-create-profile-button-is-displayed-at-the-very-start-top-of-the-home-page-content-above-the-hero-section-while-also-keeping-the-existing-create-profile-button-placement-s-elsewhere-on-the-home-page",
+      "title": "Update the authenticated Home page so that when the signed-in user does not have a profile, a centered “Create Profile” button is displayed at the very start (top) of the Home page content (above the hero section), while also keeping the existing “Create Profile” button placement(s) elsewhere on the Home page.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-post-creation-ui-to-allow-posting-without-a-profile-remove-the-ui-block-disable-logic-that-prevents-composing-and-submitting-posts-when-usegetcalleruserprofile-returns-null",
+      "title": "Update the Post creation UI to allow posting without a profile: remove the UI block/disable logic that prevents composing and submitting posts when `useGetCallerUserProfile()` returns null.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-comment-creation-ui-to-allow-commenting-without-a-profile-remove-the-ui-gating-that-hides-disables-the-comment-input-and-submission-when-the-current-user-has-no-profile",
+      "title": "Update the Comment creation UI to allow commenting without a profile: remove the UI gating that hides/disables the comment input and submission when the current user has no profile.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-display-a-placeholder-author-name-of-guest-for-any-post-or-comment-whose-author-does-not-have-a-user-profile-available-to-the-frontend-profile-lookup-returns-null",
+      "title": "Display a placeholder author name of \"Guest\" for any post or comment whose author does not have a user profile available to the frontend (profile lookup returns null).",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -322,10 +386,36 @@
       "status": "pending"
     },
     {
-      "id": "AR-6",
-      "summary": "Enforce on the backend that a user must have an existing profile before they can create a post or add a comment.",
+      "id": "AR-7",
+      "summary": "Fix username display: show the profile display name (set at profile creation time) for authors in both posts and comments; current display is still incorrect",
+      "reqIds": [],
+      "status": "in_progress"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Add a full \"Create Profile\" button on the Home page that appears only when the user has no profile; it should use a new/modified profile-creation flow (not the existing profile-creation page).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Remove the profile requirement for creating posts/comments: allow posting/commenting without a profile on both backend and frontend, and display a placeholder author name (e.g., \"Guest\") for users without profiles.",
+      "reqIds": [],
+      "status": "in_progress"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Remove the backend profile-existence enforcement for creating posts and adding comments so an authenticated caller can create posts and comments even when they have not created a UserProfile.",
       "reqIds": [
-        "REQ-12"
+        "REQ-19"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Update backend feed access so users without a profile can still retrieve and view the feed (required to support posting/commenting workflows for users without profiles).",
+      "reqIds": [
+        "REQ-20"
       ],
       "status": "pending"
     }

@@ -1,101 +1,105 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-06T08:47:51.796Z",
-  "summary": "The diff implements frontend username resolution for post/comment authors (with fallback labels and avatar initials) via a new React Query hook, and adds frontend profile-gating for creating posts. However, backend enforcement (trap on missing profile) is not evidenced in the provided backend diff excerpt, and several unrelated UI/UX/theme changes appear to have been made beyond the request scope.",
+  "generatedAt": "2026-02-06T10:04:21.632Z",
+  "summary": "Frontend changes add a consistent \"Guest\" fallback label and update feed/card rendering to use per-author profile lookups with safe principal parsing; diff summaries also claim post/comment UI no longer requires a profile. Backend changes are truncated in the provided diff, so removal of profile-enforcement traps for createPost/addComment/getFeed cannot be verified from the available evidence. Several unrelated frontend/UI/theme/auth improvements appear in the diff summary but were not requested.",
   "missing_requirements": [
     {
-      "id": "REQ-12",
-      "requirement": "Enforce on the backend that a user must have an existing profile before they can create a post or add a comment (createPost/addComment trap with clear English message when userProfiles.containsKey(caller) is false).",
-      "reason": "The provided `backend/main.mo` excerpt does not show any changes to `createPost` or `addComment`, nor any profile existence checks/traps. Because the backend file is truncated and the summary does not explicitly mention this enforcement, implementation cannot be confirmed from the diff evidence.",
+      "id": "REQ-19",
+      "requirement": "Remove the backend profile-existence enforcement for creating posts and adding comments so an authenticated caller can create posts and comments even when they have not created a UserProfile.",
+      "reason": "backend/main.mo is truncated and the diff excerpt does not show any changes to createPost(...) or addComment(...) (e.g., removal of the trap \"User must have a profile to create posts and comments!\"). لذلك cannot confirm the enforcement was removed while keeping other auth checks intact.",
       "evidence": [
-        "backend/main.mo (truncated excerpt shows types/helpers but not createPost/addComment changes)"
+        "backend/main.mo (truncated)"
       ]
     },
     {
-      "id": "REQ-13",
-      "requirement": "Ensure the frontend prevents posting/commenting when the current user has not created a profile, aligning UI with backend enforcement (including handling backend 'profile required' errors as readable English messages).",
-      "reason": "PostComposer includes a profile check and English toast, but the acceptance criteria also require that the existing mandatory profile setup modal continues to block interaction globally (no routes/pages behind it) and that comment submission is disabled/gated in edge cases. The diff does not include evidence of App-level modal gating behavior or the comment-submit disablement behavior (FeedPostCard is truncated), so full REQ-13 compliance cannot be verified.",
+      "id": "REQ-20",
+      "requirement": "Update backend feed access so users without a profile can still retrieve and view the feed (getFeed should not trap solely due to missing profile).",
+      "reason": "backend/main.mo is truncated and the diff excerpt does not show getFeed() logic or any removal of profile checks/traps for feed access.",
       "evidence": [
-        "frontend/src/components/PostComposer.tsx (profile check before posting)",
-        "frontend/src/components/FeedPostCard.tsx (truncated; cannot confirm comment submit disablement/gating)",
-        "frontend/src/App.tsx (not shown as modified; cannot confirm global modal gating behavior)"
+        "backend/main.mo (truncated)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Global theme/color system changes (switch to OKLCH red/white palette).",
-      "reason": "Not requested by any requirement; request explicitly limited scope to username display and profile gating without redesigning the entire feed UI.",
+      "description": "Global theme/color system change to OKLCH red/white for light and dark modes.",
+      "reason": "Not requested by any requirement (REQ-19..REQ-23 focus on removing profile gating and displaying \"Guest\").",
       "evidence": [
-        "frontend-file-summaries.txt (mentions `frontend/src/index.css` theme replacement)"
+        "frontend/src/index.css (mentioned in frontend-file-summaries.txt)"
       ]
     },
     {
-      "description": "Header authentication UX enhancements (toast notifications, improved button states, visual feedback).",
-      "reason": "Not requested by REQ-10 through REQ-13.",
+      "description": "Footer content changes including new attribution and developer credit \"Developed by Aryan Shinde\".",
+      "reason": "Not requested; unrelated to guest posting/commenting or author display changes.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions `frontend/src/components/Header.tsx` changes)"
+        "frontend/src/components/Footer.tsx (mentioned in frontend-file-summaries.txt)"
       ]
     },
     {
-      "description": "Footer content changes including developer credit.",
-      "reason": "Not requested by REQ-10 through REQ-13.",
+      "description": "Header authentication UX enhancements (toasts, improved button states, visual feedback).",
+      "reason": "Not requested; requirements do not mention auth UX changes.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions `frontend/src/components/Footer.tsx` change)"
+        "frontend/src/components/Header.tsx (mentioned in frontend-file-summaries.txt)"
       ]
     },
     {
-      "description": "Home page changes (new sections and showing PostComposer or login CTA).",
-      "reason": "Not requested; outside the feed username/profile-gating scope.",
+      "description": "Profile setup modal API changed to controlled modal with open/onOpenChange/onSuccess props.",
+      "reason": "Not requested; requirements explicitly say not to change profile creation UX beyond removing the posting/commenting gate.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions `frontend/src/pages/HomePage.tsx` changes)"
+        "frontend/src/components/ProfileSetupModal.tsx (mentioned in frontend-file-summaries.txt)"
       ]
     },
     {
-      "description": "StudyGroupsPage create-flow hardening and expanded error reporting.",
-      "reason": "Not requested by REQ-10 through REQ-13.",
+      "description": "Home page layout/UX changes adding multiple conditional \"Create Profile\" buttons/sections and conditional PostComposer display.",
+      "reason": "Not requested; requirements only ask to remove gating on post/comment creation and display \"Guest\" when profile missing.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions `frontend/src/pages/StudyGroupsPage.tsx` changes)"
+        "frontend/src/pages/HomePage.tsx (mentioned in frontend-file-summaries.txt)"
       ]
     },
     {
-      "description": "ModerationPage enum comparison fixes for report status filtering/updates.",
-      "reason": "Not requested by REQ-10 through REQ-13.",
+      "description": "Study groups page create flow hardened with extra checks and detailed error handling.",
+      "reason": "Not requested; unrelated feature area.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions `frontend/src/pages/ModerationPage.tsx` changes)"
+        "frontend/src/pages/StudyGroupsPage.tsx (mentioned in frontend-file-summaries.txt)"
       ]
     },
     {
-      "description": "Internet Identity hook improvements (fallback II URL, state management, auth client recreation).",
-      "reason": "Not requested; auth provider changes were explicitly listed as non-goals.",
+      "description": "Forum page changes adding question posting dialog and placeholder for future forum posts.",
+      "reason": "Not requested; unrelated feature area.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions `frontend/src/hooks/useInternetIdentity.ts` changes)"
+        "frontend/src/pages/ForumPage.tsx (mentioned in frontend-file-summaries.txt)"
       ]
     },
     {
-      "description": "Actor initialization hook behavior changes (query invalidation/refetch behavior adjustments).",
-      "reason": "Not requested by REQ-10 through REQ-13.",
+      "description": "Chat page implementation/changes (contact list, message composition, conversation view).",
+      "reason": "Not requested; unrelated feature area.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions `frontend/src/hooks/useActor.ts` changes)"
+        "frontend/src/pages/ChatPage.tsx (mentioned in frontend-file-summaries.txt)"
       ]
     },
     {
-      "description": "HTML title/meta updates (page title 'ICSE Crowd').",
-      "reason": "Not requested by REQ-10 through REQ-13.",
+      "description": "Moderation dashboard adjustments (enum comparison for filtering, report updates).",
+      "reason": "Not requested; unrelated feature area.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions `frontend/index.html` updates)"
+        "frontend/src/pages/ModerationPage.tsx (mentioned in frontend-file-summaries.txt)"
+      ]
+    },
+    {
+      "description": "Media validation enhancements including shared 600MB video size constant/label and related UI validation.",
+      "reason": "Not requested; requirements do not mention changing media upload limits/validation.",
+      "evidence": [
+        "frontend/src/utils/mediaGuards.ts (mentioned in frontend-file-summaries.txt)",
+        "backend/main.mo (shows MAX_VIDEO_SIZE_BYTES constant in truncated excerpt)"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.6,
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",
     "frontend/src/components/FeedPostCard.tsx",
     "frontend/src/components/PostComposer.tsx",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/FeedPage.tsx",
     "frontend/src/utils/userDisplay.ts",
     "project_state.json"
   ]

@@ -7,7 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
-export default function ProfileSetupModal() {
+interface ProfileSetupModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+}
+
+export default function ProfileSetupModal({ open, onOpenChange, onSuccess }: ProfileSetupModalProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [academicDetails, setAcademicDetails] = useState('');
@@ -24,14 +30,19 @@ export default function ProfileSetupModal() {
     try {
       await createProfile.mutateAsync({ name, email, academicDetails });
       toast.success('Profile created successfully!');
+      setName('');
+      setEmail('');
+      setAcademicDetails('');
+      onOpenChange(false);
+      onSuccess?.();
     } catch (error: any) {
       toast.error(error.message || 'Failed to create profile');
     }
   };
 
   return (
-    <Dialog open={true}>
-      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Welcome to ICSE Connect!</DialogTitle>
           <DialogDescription>Please set up your profile to get started.</DialogDescription>

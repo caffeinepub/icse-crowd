@@ -10,6 +10,7 @@ import { hasValidVideo, getVideoURL, hasValidImage, getImageURL, hasValidDocumen
 import { useGetPostComments, useGetUserProfile, useGetCallerUserProfile } from '../hooks/useQueries';
 import { normalizeICError } from '../utils/icErrors';
 import { getUserInitials, getUnknownUserLabel } from '../utils/userDisplay';
+import { safePrincipalFromText } from '../utils/principal';
 
 interface FeedPostCardProps {
   post: Post;
@@ -27,9 +28,8 @@ interface AuthorDisplayProps {
 
 // Separate component to handle author profile fetching per author
 const AuthorDisplay = memo(function AuthorDisplay({ authorPrincipal }: AuthorDisplayProps) {
-  const { data: profile, isLoading } = useGetUserProfile(
-    authorPrincipal ? { toString: () => authorPrincipal } as any : null
-  );
+  const principal = safePrincipalFromText(authorPrincipal);
+  const { data: profile, isLoading } = useGetUserProfile(principal);
 
   if (isLoading) {
     return <span className="font-medium">Loading...</span>;
@@ -44,9 +44,8 @@ interface CommentAuthorDisplayProps {
 }
 
 const CommentAuthorDisplay = memo(function CommentAuthorDisplay({ authorPrincipal }: CommentAuthorDisplayProps) {
-  const { data: profile, isLoading } = useGetUserProfile(
-    authorPrincipal ? { toString: () => authorPrincipal } as any : null
-  );
+  const principal = safePrincipalFromText(authorPrincipal);
+  const { data: profile, isLoading } = useGetUserProfile(principal);
 
   if (isLoading) {
     return <span className="text-sm font-medium">Loading...</span>;
@@ -61,11 +60,10 @@ interface AuthorAvatarProps {
 }
 
 const AuthorAvatar = memo(function AuthorAvatar({ authorPrincipal }: AuthorAvatarProps) {
-  const { data: profile } = useGetUserProfile(
-    authorPrincipal ? { toString: () => authorPrincipal } as any : null
-  );
+  const principal = safePrincipalFromText(authorPrincipal);
+  const { data: profile } = useGetUserProfile(principal);
 
-  const initials = profile?.name ? getUserInitials(profile.name) : 'U';
+  const initials = profile?.name ? getUserInitials(profile.name) : 'G';
 
   return (
     <Avatar>
@@ -79,11 +77,10 @@ interface CommentAuthorAvatarProps {
 }
 
 const CommentAuthorAvatar = memo(function CommentAuthorAvatar({ authorPrincipal }: CommentAuthorAvatarProps) {
-  const { data: profile } = useGetUserProfile(
-    authorPrincipal ? { toString: () => authorPrincipal } as any : null
-  );
+  const principal = safePrincipalFromText(authorPrincipal);
+  const { data: profile } = useGetUserProfile(principal);
 
-  const initials = profile?.name ? getUserInitials(profile.name) : 'U';
+  const initials = profile?.name ? getUserInitials(profile.name) : 'G';
 
   return (
     <Avatar className="h-8 w-8">
@@ -123,14 +120,11 @@ const FeedPostCard = memo(function FeedPostCard({
   }, []);
 
   const handleCommentSubmit = useCallback(() => {
-    if (!currentUserProfile) {
-      return;
-    }
     if (commentInput.trim()) {
       onComment(post.id, commentInput);
       setCommentInput('');
     }
-  }, [onComment, post.id, commentInput, currentUserProfile]);
+  }, [onComment, post.id, commentInput]);
 
   const handleCommentInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setCommentInput(e.target.value);
@@ -142,8 +136,6 @@ const FeedPostCard = memo(function FeedPostCard({
       handleCommentSubmit();
     }
   }, [handleCommentSubmit]);
-
-  const canComment = !!currentUserProfile;
 
   return (
     <Card>
@@ -220,24 +212,17 @@ const FeedPostCard = memo(function FeedPostCard({
 
         {showComments && (
           <div className="space-y-3 border-t pt-4">
-            {!canComment && (
-              <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400">
-                Please create a profile to comment on posts.
-              </div>
-            )}
-            {canComment && (
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Write a comment..."
-                  value={commentInput}
-                  onChange={handleCommentInputChange}
-                  onKeyDown={handleKeyDown}
-                />
-                <Button size="icon" onClick={handleCommentSubmit} disabled={isCommenting}>
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
+            <div className="flex gap-2">
+              <Input
+                placeholder="Write a comment..."
+                value={commentInput}
+                onChange={handleCommentInputChange}
+                onKeyDown={handleKeyDown}
+              />
+              <Button size="icon" onClick={handleCommentSubmit} disabled={isCommenting}>
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
 
             {commentsLoading && (
               <div className="flex items-center justify-center py-4 text-muted-foreground">

@@ -1,10 +1,10 @@
 {
-  "frontend/src/App.tsx": "Main application component with lazy-loaded page components wrapped in Suspense boundaries for code splitting, authentication state management, profile setup modal, and theme provider integration.",
+  "frontend/src/App.tsx": "Main application component with lazy-loaded page components wrapped in Suspense boundaries for code splitting, authentication state management, and theme provider integration without auto-gating profile setup.",
   "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including a new useGetUserProfile hook that fetches and caches any user's profile by principal with a stable queryKey.",
   "frontend/src/components/Header.tsx": "Navigation header with enhanced authentication UX including toast notifications for login errors, improved button states during initialization and login, and better visual feedback for authentication status.",
   "frontend/src/components/Footer.tsx": "Footer component with copyright notice, caffeine.ai attribution, and developer credit \"Developed by Aryan Shinde\".",
-  "frontend/src/components/ProfileSetupModal.tsx": "Modal dialog for first-time user profile creation with name, email, and academic details fields.",
-  "frontend/src/pages/HomePage.tsx": "Landing page with hero section, feature cards, collaboration showcase, inquiries section, and a new bottom section that shows PostComposer for authenticated users or a login CTA for unauthenticated users.",
+  "frontend/src/components/ProfileSetupModal.tsx": "Controlled modal dialog for user profile creation with name, email, and academic details fields, accepting open/onOpenChange/onSuccess props for flexible usage.",
+  "frontend/src/pages/HomePage.tsx": "Landing page with hero section, feature cards, collaboration showcase, inquiries section, and conditional \"Create Profile\" buttons appearing in three centered locations (top of page, hero section, and \"Complete Your Profile\" section) for authenticated users without profiles, plus PostComposer for users with profiles.",
   "frontend/src/pages/FeedPage.tsx": "Social feed page with PostComposer integration, memoized post sorting, stable callbacks for likes and comments, and normalized IC error handling for all mutations.",
   "frontend/src/pages/StudyGroupsPage.tsx": "Study groups page with hardened create flow that prevents submission while actor initializes, checks authentication state, and displays detailed error messages including underlying canister reject/trap reasons.",
   "frontend/src/pages/ForumPage.tsx": "Q&A forum page with question posting dialog and placeholder for future forum posts.",
@@ -12,11 +12,12 @@
   "frontend/src/pages/ModerationPage.tsx": "Admin moderation dashboard with report management using proper enum comparison for report status filtering and updates.",
   "frontend/src/index.css": "Global styles with OKLCH color system featuring red/white primary colors (hue 15) for both light and dark modes, replacing the previous purple/blue theme.",
   "frontend/index.html": "HTML entry point with updated page title \"ICSE Crowd\" and meta tags.",
-  "frontend/src/components/PostComposer.tsx": "Reusable post creation component with profile-gated posting that disables the UI and shows English messages when the user has no profile, includes normalized IC error handling for backend traps.",
+  "frontend/src/components/PostComposer.tsx": "Reusable post creation component that allows all authenticated users to create posts with text, images, videos, and documents, includes normalized IC error handling for backend traps, and no longer requires a user profile to post.",
   "frontend/src/utils/mediaGuards.ts": "Utility functions for safely checking and retrieving media attachment URLs from posts, validating file types, formatting file sizes, and exporting a shared 600MB video size constant (MAX_VIDEO_SIZE_BYTES) with its human-readable label.",
   "frontend/src/utils/icErrors.ts": "Utility function to extract readable error messages from IC canister errors, handling common patterns like Runtime.trap messages and agent error formats.",
-  "frontend/src/components/FeedPostCard.tsx": "Memoized per-post rendering component that displays usernames and avatar initials for post and comment authors using dedicated child components with profile lookups, includes profile-gated comment submission with English error messages, and uses normalized IC error handling.",
+  "frontend/src/components/FeedPostCard.tsx": "Memoized per-post rendering component that displays usernames and avatar initials for post and comment authors using proper Principal instances (via safePrincipalFromText) for profile lookups, allows all authenticated users to comment without profile requirement, uses normalized IC error handling, and shows \"Guest\" with \"G\" avatar fallback for users without profiles.",
   "frontend/src/hooks/useActor.ts": "Actor initialization hook that creates authenticated or anonymous backend actors and invalidates dependent queries on actor changes without forcing immediate double-refetch, preserving admin token initialization.",
   "frontend/src/hooks/useInternetIdentity.ts": "Internet Identity authentication hook with improved error handling, fallback to default production II URL (https://identity.ic0.app), better state management for login/logout flows, and proper auth client recreation after logout.",
-  "frontend/src/utils/userDisplay.ts": "Utility functions for deriving display initials from usernames and providing consistent English fallback labels for unknown or missing users."
+  "frontend/src/utils/userDisplay.ts": "Utility functions for deriving display initials from usernames and providing consistent \"Guest\" fallback labels for unknown or missing users.",
+  "frontend/src/utils/principal.ts": "Utility function to safely convert principal text strings into Principal instances with error handling, returning null on invalid input."
 }

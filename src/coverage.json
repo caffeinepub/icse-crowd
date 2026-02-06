@@ -1,61 +1,62 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-06T08:47:51.799Z",
+  "generatedAt": "2026-02-06T10:04:21.635Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
+    "total": 5,
     "implemented": 3,
     "items": [
       {
-        "id": "REQ-10",
-        "summary": "Replace principal/placeholder author strings in the feed UI with the author’s profile username for both posts and comments.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/FeedPostCard.tsx",
-          "frontend/src/utils/userDisplay.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/FeedPostCard.tsx",
-          "frontend/src/utils/userDisplay.ts"
-        ]
-      },
-      {
-        "id": "REQ-11",
-        "summary": "Add React Query data access to retrieve a user profile for an arbitrary principal and reuse it to resolve usernames in the feed.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/FeedPostCard.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/FeedPostCard.tsx"
-        ]
-      },
-      {
-        "id": "REQ-12",
-        "summary": "Enforce on the backend that a user must have an existing profile before they can create a post or add a comment.",
+        "id": "REQ-19",
+        "summary": "Remove the backend profile-existence enforcement for creating posts and adding comments so an authenticated caller can create posts and comments even when they have not created a UserProfile.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-13",
-        "summary": "Ensure the frontend prevents posting/commenting when the current user has not created a profile, aligning the UI behavior with the backend enforcement.",
+        "id": "REQ-20",
+        "summary": "Update backend feed access so users without a profile can still retrieve and view the feed (required to support posting/commenting workflows for users without profiles).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-21",
+        "summary": "Update the Post creation UI to allow posting without a profile: remove the UI block/disable logic that prevents composing and submitting posts when `useGetCallerUserProfile()` returns null.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/PostComposer.tsx",
-          "frontend/src/components/FeedPostCard.tsx",
-          "frontend/src/pages/FeedPage.tsx"
+          "frontend/src/components/PostComposer.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/PostComposer.tsx",
-          "frontend/src/components/FeedPostCard.tsx",
-          "frontend/src/pages/FeedPage.tsx"
+          "frontend/src/components/PostComposer.tsx"
+        ]
+      },
+      {
+        "id": "REQ-22",
+        "summary": "Update the Comment creation UI to allow commenting without a profile: remove the UI gating that hides/disables the comment input and submission when the current user has no profile.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/FeedPostCard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/FeedPostCard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-23",
+        "summary": "Display a placeholder author name of \"Guest\" for any post or comment whose author does not have a user profile available to the frontend (profile lookup returns null).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/userDisplay.ts",
+          "frontend/src/components/FeedPostCard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/userDisplay.ts",
+          "frontend/src/components/FeedPostCard.tsx"
         ]
       }
     ]
@@ -68,8 +69,6 @@
     "frontend-implementation-plan.json",
     "frontend/src/components/FeedPostCard.tsx",
     "frontend/src/components/PostComposer.tsx",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/FeedPage.tsx",
     "frontend/src/utils/userDisplay.ts",
     "project_state.json",
     "scratch/component-selection.json",

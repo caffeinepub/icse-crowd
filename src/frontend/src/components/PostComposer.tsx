@@ -101,11 +101,6 @@ export default function PostComposer() {
   };
 
   const handleCreatePost = async () => {
-    if (!currentUserProfile) {
-      toast.error('Please create a profile before posting');
-      return;
-    }
-
     if (!newPostContent.trim() && !selectedImage && !selectedVideo && !selectedDocument) {
       toast.error('Please add some content or attach a file');
       return;
@@ -180,7 +175,6 @@ export default function PostComposer() {
   };
 
   const isUploading = uploadProgress.image > 0 || uploadProgress.video > 0 || uploadProgress.document > 0;
-  const canPost = !profileLoading && !!currentUserProfile;
 
   return (
     <Card>
@@ -188,17 +182,11 @@ export default function PostComposer() {
         <h2 className="text-xl font-semibold">Create a Post</h2>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!canPost && !profileLoading && (
-          <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400">
-            Please create a profile before posting.
-          </div>
-        )}
         <Textarea
           placeholder="What's on your mind?"
           value={newPostContent}
           onChange={(e) => setNewPostContent(e.target.value)}
           rows={3}
-          disabled={!canPost}
         />
 
         {imagePreview && (
@@ -296,9 +284,8 @@ export default function PostComposer() {
             onChange={handleImageSelect}
             className="hidden"
             id="image-upload-composer"
-            disabled={!canPost}
           />
-          <Button variant="outline" size="sm" asChild disabled={!canPost}>
+          <Button variant="outline" size="sm" asChild>
             <label htmlFor="image-upload-composer" className="cursor-pointer">
               <ImageIcon className="mr-2 h-4 w-4" />
               Image
@@ -311,9 +298,8 @@ export default function PostComposer() {
             onChange={handleVideoSelect}
             className="hidden"
             id="video-upload-composer"
-            disabled={!canPost}
           />
-          <Button variant="outline" size="sm" asChild disabled={!canPost}>
+          <Button variant="outline" size="sm" asChild>
             <label htmlFor="video-upload-composer" className="cursor-pointer">
               <Video className="mr-2 h-4 w-4" />
               Video
@@ -326,16 +312,15 @@ export default function PostComposer() {
             onChange={handleDocumentSelect}
             className="hidden"
             id="document-upload-composer"
-            disabled={!canPost}
           />
-          <Button variant="outline" size="sm" asChild disabled={!canPost}>
+          <Button variant="outline" size="sm" asChild>
             <label htmlFor="document-upload-composer" className="cursor-pointer">
               <FileText className="mr-2 h-4 w-4" />
               Document
             </label>
           </Button>
         </div>
-        <Button onClick={handleCreatePost} disabled={createPost.isPending || !canPost}>
+        <Button onClick={handleCreatePost} disabled={createPost.isPending}>
           {createPost.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

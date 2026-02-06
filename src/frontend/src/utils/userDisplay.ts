@@ -8,7 +8,7 @@
  */
 export function getUserInitials(username: string): string {
   if (!username || username.trim().length === 0) {
-    return 'U';
+    return 'G';
   }
 
   const trimmed = username.trim();
@@ -27,5 +27,5 @@ export function getUserInitials(username: string): string {
  * Returns a consistent fallback label for unknown or missing users.
  */
 export function getUnknownUserLabel(): string {
-  return 'Unknown user';
+  return 'Guest';
 }

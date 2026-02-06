@@ -1,95 +1,105 @@
 {
   "kind": "build_request",
-  "title": "Display profile usernames for posts/comments and require profile before posting or commenting",
-  "priority": "normal",
+  "title": "Allow posting and commenting without a user profile and display authors as “Guest” when no profile exists",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-10",
-      "text": "Replace principal/placeholder author strings in the feed UI with the author’s profile username for both posts and comments.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-6"
-        ],
-        "quotes": [
-          "Show the person name who is posting. Instead of those random spelling",
-          "Show the username in both."
-        ]
-      },
-      "acceptanceCriteria": [
-        "In `frontend/src/components/FeedPostCard.tsx`, the post header shows the author’s profile `name` (username) instead of `post.author.toString().slice(0, 10)`.",
-        "In `frontend/src/components/FeedPostCard.tsx`, each rendered comment shows the comment author’s profile `name` (username) instead of `comment.author.toString().slice(0, 10)`.",
-        "If a profile lookup fails or returns null, the UI shows a clear fallback label in English (e.g., \"Unknown user\") rather than a truncated principal.",
-        "Avatar fallbacks use initials derived from the username when available (for both post and comment author avatars)."
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "text": "Add React Query data access to retrieve a user profile for an arbitrary principal and reuse it to resolve usernames in the feed.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-6"
-        ],
-        "quotes": [
-          "Show the person name who is posting. Instead of those random spelling",
-          "Show the username in both."
-        ]
-      },
-      "acceptanceCriteria": [
-        "A new hook is added in `frontend/src/hooks/useQueries.ts` to fetch `getUserProfile(principal)` and cache it with a stable queryKey that includes the principal string (e.g., `['userProfile', principalStr]`).",
-        "`FeedPostCard` uses the new hook (or equivalent shared query logic) to display usernames for the post author and comment authors without introducing infinite re-render loops.",
-        "User-facing error handling remains in English and does not crash the feed if a profile fetch fails."
-      ]
-    },
-    {
-      "id": "REQ-12",
-      "text": "Enforce on the backend that a user must have an existing profile before they can create a post or add a comment.",
+      "id": "REQ-19",
+      "text": "Remove the backend profile-existence enforcement for creating posts and adding comments so an authenticated caller can create posts and comments even when they have not created a UserProfile.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "recent-messages"
         ],
         "quotes": [
-          "Who has not prepared profile should not be allowed to post without creating profile"
+          "Allow everyone to post irrespective they have profile or not",
+          "1 yes 2 yes  3 yes"
         ]
       },
       "acceptanceCriteria": [
-        "In `backend/main.mo`, `createPost` traps with a clear English message if `userProfiles.containsKey(caller)` is false.",
-        "In `backend/main.mo`, `addComment` traps with a clear English message if `userProfiles.containsKey(caller)` is false.",
-        "Existing behavior for authorized users who do have profiles remains unchanged (posts/comments are still created as before)."
+        "Calling `createPost(...)` no longer traps with \"User must have a profile to create posts and comments!\" when the caller has no stored profile.",
+        "Calling `addComment(postId, content)` no longer traps with \"User must have a profile to create posts and comments!\" when the caller has no stored profile.",
+        "Existing authorization checks (e.g., permission checks) remain in place; only the profile-existence requirement is removed for these two actions."
       ]
     },
     {
-      "id": "REQ-13",
-      "text": "Ensure the frontend prevents posting/commenting when the current user has not created a profile, aligning the UI behavior with the backend enforcement.",
-      "target": "frontend",
+      "id": "REQ-20",
+      "text": "Update backend feed access so users without a profile can still retrieve and view the feed (required to support posting/commenting workflows for users without profiles).",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "recent-messages"
         ],
         "quotes": [
-          "Who has not prepared profile should not be allowed to post without creating profile"
+          "Allow everyone to post irrespective they have profile or not"
         ]
       },
       "acceptanceCriteria": [
-        "When the authenticated user has no profile, the app flow continues to block interaction via the existing profile setup modal (no route/page renders behind it).",
-        "If any posting/commenting UI can still render (edge cases), the post composer submit and comment submit actions are disabled and show an English message instructing the user to create a profile first.",
-        "If the backend returns the new \"profile required\" error, the frontend displays a readable English toast/error message (not raw traps)."
+        "Calling `getFeed()` no longer traps solely because the caller has no profile.",
+        "The feed still returns the same Post data as before for callers with profiles."
+      ]
+    },
+    {
+      "id": "REQ-21",
+      "text": "Update the Post creation UI to allow posting without a profile: remove the UI block/disable logic that prevents composing and submitting posts when `useGetCallerUserProfile()` returns null.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages"
+        ],
+        "quotes": [
+          "2 yes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The post composer textarea, attachment buttons, and Post submit button are usable even when the current user has no profile.",
+        "Submitting a post without a profile attempts the backend `createPost` call and shows success/error toasts based on the result (no frontend-side \"Please create a profile before posting\" hard-block)."
+      ]
+    },
+    {
+      "id": "REQ-22",
+      "text": "Update the Comment creation UI to allow commenting without a profile: remove the UI gating that hides/disables the comment input and submission when the current user has no profile.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages"
+        ],
+        "quotes": [
+          "2 yes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When comments are expanded on a post, the comment input and submit action are available even if the current user has no profile.",
+        "Submitting a comment without a profile triggers the existing comment mutation and updates the comments list via existing query invalidation."
+      ]
+    },
+    {
+      "id": "REQ-23",
+      "text": "Display a placeholder author name of \"Guest\" for any post or comment whose author does not have a user profile available to the frontend (profile lookup returns null).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages"
+        ],
+        "quotes": [
+          "3 yes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "In the feed UI, posts authored by principals without a profile show author name \"Guest\" instead of \"Unknown user\" (or a principal placeholder).",
+        "In the comments UI, comments authored by principals without a profile show author name \"Guest\" instead of \"Unknown user\" (or a principal placeholder).",
+        "Avatar fallbacks remain functional for users without profiles (no runtime errors when profile is missing)."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor; implement changes in `backend/main.mo` only (no additional backend services).",
-    "Do not edit files under `frontend/src/components/ui` or the immutable hook files listed in SYSTEM_CONTEXT.",
-    "Use English for all user-facing strings added or modified."
+    "Backend must remain a single Motoko actor in `backend/main.mo` (no additional backend services).",
+    "Do not edit files under `frontend/src/components/ui/*` or the immutable hook/entry files listed in SYSTEM_CONTEXT."
   ],
   "nonGoals": [
-    "Implementing a full friends list or contacts endpoint for chat.",
-    "Changing authentication providers or adding third-party auth.",
-    "Redesigning the entire feed UI beyond replacing author identifiers with usernames and enforcing profile gating for post/comment creation."
+    "Changing posting/commenting permissions for unauthenticated (not signed-in) users.",
+    "Implementing a new guest/anonymous identity system; the backend still attributes posts/comments to the caller principal.",
+    "Changing profile creation UX beyond removing the posting/commenting gate."
   ],
   "imageRequirements": {
     "required": [],

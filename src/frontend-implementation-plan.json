@@ -1,74 +1,56 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Feed username resolution and profile-gated posting/commenting",
+  "title": "Enable posting/commenting without profiles and show missing authors as Guest",
   "requirements": [
     {
-      "id": "REQ-10",
-      "summary": "Show author profile usernames (with English fallbacks) for posts and comments in the feed UI, including avatar initials derived from usernames.",
+      "id": "REQ-21",
+      "summary": "Allow authenticated users to compose and submit posts even when no UserProfile exists.",
       "acceptanceCriteria": [
-        "In `frontend/src/components/FeedPostCard.tsx`, the post header shows the author’s profile `name` (username) instead of `post.author.toString().slice(0, 10)`.",
-        "In `frontend/src/components/FeedPostCard.tsx`, each rendered comment shows the comment author’s profile `name` (username) instead of `comment.author.toString().slice(0, 10)`.",
-        "If a profile lookup fails or returns null, the UI shows a clear fallback label in English (e.g., \"Unknown user\") rather than a truncated principal.",
-        "Avatar fallbacks use initials derived from the username when available (for both post and comment author avatars)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/FeedPostCard.tsx",
-          "operation": "modify",
-          "description": "Replace truncated principal rendering for post/comment authors with a reusable author display (name + avatar fallback initials) powered by cached profile lookups; include an English fallback label (e.g., \"Unknown user\") when profile is missing or fetch fails."
-        },
-        {
-          "path": "frontend/src/utils/userDisplay.ts",
-          "operation": "create",
-          "description": "Add small UI helpers for deriving display initials from a username and providing consistent English fallback labels for missing/unknown users."
-        }
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "summary": "Add a shared React Query hook to fetch and cache arbitrary user profiles by principal, and reuse it to resolve usernames in the feed without render loops.",
-      "acceptanceCriteria": [
-        "A new hook is added in `frontend/src/hooks/useQueries.ts` to fetch `getUserProfile(principal)` and cache it with a stable queryKey that includes the principal string (e.g., `['userProfile', principalStr]`).",
-        "`FeedPostCard` uses the new hook (or equivalent shared query logic) to display usernames for the post author and comment authors without introducing infinite re-render loops.",
-        "User-facing error handling remains in English and does not crash the feed if a profile fetch fails."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Add a new React Query hook (e.g., `useGetUserProfile(principal)`) that calls the backend capability `getUserProfile`, caches results under a stable queryKey including the principal string, and is safely disabled until the actor is ready. (Authorization component context: this aligns with profile access patterns; Verify the component's usage instructions before implementing.)"
-        },
-        {
-          "path": "frontend/src/components/FeedPostCard.tsx",
-          "operation": "modify",
-          "description": "Refactor post/comment author rendering to use the new `useGetUserProfile` hook via a dedicated child component (one hook call per rendered author) to stay within React hook rules and avoid infinite re-render loops."
-        }
-      ]
-    },
-    {
-      "id": "REQ-13",
-      "summary": "Prevent posting/commenting in the UI when the current user has no profile, and display readable English errors (including backend \"profile required\" traps) via normalized messaging.",
-      "acceptanceCriteria": [
-        "When the authenticated user has no profile, the app flow continues to block interaction via the existing profile setup modal (no route/page renders behind it).",
-        "If any posting/commenting UI can still render (edge cases), the post composer submit and comment submit actions are disabled and show an English message instructing the user to create a profile first.",
-        "If the backend returns the new \"profile required\" error, the frontend displays a readable English toast/error message (not raw traps)."
+        "The post composer textarea, attachment buttons, and Post submit button are usable even when the current user has no profile.",
+        "Submitting a post without a profile attempts the backend `createPost` call and shows success/error toasts based on the result (no frontend-side \"Please create a profile before posting\" hard-block)."
       ],
       "file_operations": [
         {
           "path": "frontend/src/components/PostComposer.tsx",
           "operation": "modify",
-          "description": "Use the existing current-user profile query to disable the \"Post\" action when the authenticated user has no profile (edge-case protection), and show an English message instructing the user to create a profile first. Also normalize backend errors into readable English text before showing toasts. (Authorization component context: this complements the profile setup flow; Verify the component's usage instructions before implementing.)"
+          "description": "Remove the profile-based gating in the post composer (no early-return toast, no disabling textarea/attachments/submit when `useGetCallerUserProfile()` is null). Keep existing validation for empty content and retain success/error toasts driven by the `useCreatePost` mutation."
+        }
+      ]
+    },
+    {
+      "id": "REQ-22",
+      "summary": "Allow authenticated users to write and submit comments even when no UserProfile exists.",
+      "acceptanceCriteria": [
+        "When comments are expanded on a post, the comment input and submit action are available even if the current user has no profile.",
+        "Submitting a comment without a profile triggers the existing comment mutation and updates the comments list via existing query invalidation."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/FeedPostCard.tsx",
+          "operation": "modify",
+          "description": "Remove profile-based UI gating for commenting: always render the comment input/submit controls when comments are expanded, and remove the `currentUserProfile` check that blocks `handleCommentSubmit`. Preserve existing trim checks, use of `onComment`, and existing React Query invalidation behavior via the `useAddComment` hook."
+        }
+      ]
+    },
+    {
+      "id": "REQ-23",
+      "summary": "Show author name as \"Guest\" for posts/comments whose author has no profile available to the frontend, while keeping avatar fallbacks safe.",
+      "acceptanceCriteria": [
+        "In the feed UI, posts authored by principals without a profile show author name \"Guest\" instead of \"Unknown user\" (or a principal placeholder).",
+        "In the comments UI, comments authored by principals without a profile show author name \"Guest\" instead of \"Unknown user\" (or a principal placeholder).",
+        "Avatar fallbacks remain functional for users without profiles (no runtime errors when profile is missing)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/userDisplay.ts",
+          "operation": "modify",
+          "description": "Update the unknown-user display label utility so missing-profile authors display the placeholder name \"Guest\" (replacing the current \"Unknown user\" fallback)."
         },
         {
           "path": "frontend/src/components/FeedPostCard.tsx",
           "operation": "modify",
-          "description": "Add edge-case UI gating for comment submission when the current user has no profile: disable comment submit and show an English message prompting profile creation; ensure any backend trap/reject errors are normalized to readable English before display."
-        },
-        {
-          "path": "frontend/src/pages/FeedPage.tsx",
-          "operation": "modify",
-          "description": "Update post/comment mutation error handling to use the shared IC error normalization utility so new backend \"profile required\" trap messages (and other canister rejects) are displayed as readable English toasts."
+          "description": "Ensure post/comment author display uses the updated fallback label for missing profiles, and adjust avatar fallback initials for missing profiles (e.g., use a safe guest fallback) to avoid runtime errors when profile is null."
         }
       ]
     }

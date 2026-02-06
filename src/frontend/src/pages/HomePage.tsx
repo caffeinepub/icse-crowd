@@ -1,13 +1,21 @@
+import { useState } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useGetCallerUserProfile } from '../hooks/useQueries';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, MessageSquare, Shield, Mail, Copy } from 'lucide-react';
+import { Users, BookOpen, MessageSquare, Shield, Mail, Copy, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import PostComposer from '../components/PostComposer';
+import ProfileSetupModal from '../components/ProfileSetupModal';
 
 export default function HomePage() {
   const { identity, login, loginStatus } = useInternetIdentity();
+  const { data: currentUserProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
   const isAuthenticated = !!identity;
+  const hasProfile = !!currentUserProfile;
+  const showCreateProfileButton = isAuthenticated && !profileLoading && isFetched && !hasProfile;
 
   const features = [
     {
@@ -45,6 +53,19 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col">
+      {showCreateProfileButton && (
+        <section className="bg-background py-8 border-b">
+          <div className="container">
+            <div className="flex justify-center">
+              <Button size="lg" onClick={() => setShowProfileModal(true)} className="gap-2">
+                <UserPlus className="h-5 w-5" />
+                Create Profile
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="relative overflow-hidden bg-gradient-to-b from-primary/10 to-background py-20 md:py-32">
         <div className="container relative z-10">
           <div className="mx-auto max-w-3xl text-center">
@@ -55,11 +76,19 @@ export default function HomePage() {
               The social media platform designed exclusively for ICSE students. Build friendships, collaborate on
               studies, and excel academically.
             </p>
-            {!isAuthenticated && (
-              <Button size="lg" onClick={login} disabled={loginStatus === 'logging-in'}>
-                {loginStatus === 'logging-in' ? 'Logging in...' : 'Get Started'}
-              </Button>
-            )}
+            <div className="flex justify-center">
+              {!isAuthenticated && (
+                <Button size="lg" onClick={login} disabled={loginStatus === 'logging-in'}>
+                  {loginStatus === 'logging-in' ? 'Logging in...' : 'Get Started'}
+                </Button>
+              )}
+              {showCreateProfileButton && (
+                <Button size="lg" onClick={() => setShowProfileModal(true)} className="gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Create Profile
+                </Button>
+              )}
+            </div>
           </div>
         </div>
         <div className="absolute inset-0 -z-10 opacity-20">
@@ -221,7 +250,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {isAuthenticated && (
+      {isAuthenticated && hasProfile && (
         <section className="bg-background py-16 md:py-20">
           <div className="container">
             <div className="mx-auto max-w-2xl">
@@ -230,6 +259,30 @@ export default function HomePage() {
                 <p className="text-muted-foreground">Create a post to connect with the ICSE community</p>
               </div>
               <PostComposer />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {isAuthenticated && showCreateProfileButton && (
+        <section className="bg-background py-16 md:py-20">
+          <div className="container">
+            <div className="mx-auto max-w-2xl text-center">
+              <div className="mb-6 flex justify-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                  <UserPlus className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              <h2 className="mb-4 text-2xl font-bold md:text-3xl">Complete Your Profile</h2>
+              <p className="mb-6 text-muted-foreground">
+                Create your profile to start posting, connecting with students, and joining the ICSE community.
+              </p>
+              <div className="flex justify-center">
+                <Button size="lg" onClick={() => setShowProfileModal(true)} className="gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Create Profile
+                </Button>
+              </div>
             </div>
           </div>
         </section>
@@ -255,6 +308,14 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      <ProfileSetupModal
+        open={showProfileModal}
+        onOpenChange={setShowProfileModal}
+        onSuccess={() => {
+          // Profile will be refetched automatically via query invalidation
+        }}
+      />
     </div>
   );
 }

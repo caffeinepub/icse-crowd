@@ -1,10 +1,8 @@
 import { useInternetIdentity } from './hooks/useInternetIdentity';
-import { useGetCallerUserProfile } from './hooks/useQueries';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import ProfileSetupModal from './components/ProfileSetupModal';
 import { useState, lazy, Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 
@@ -32,19 +30,13 @@ function PageLoadingFallback() {
 
 export default function App() {
   const { identity } = useInternetIdentity();
-  const { data: userProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
   const [currentPage, setCurrentPage] = useState<PageView>('home');
 
   const isAuthenticated = !!identity;
-  const showProfileSetup = isAuthenticated && !profileLoading && isFetched && userProfile === null;
 
   const renderPage = () => {
     if (!isAuthenticated) {
       return <HomePage />;
-    }
-
-    if (showProfileSetup) {
-      return null;
     }
 
     switch (currentPage) {
@@ -75,7 +67,6 @@ export default function App() {
           </Suspense>
         </main>
         <Footer />
-        {showProfileSetup && <ProfileSetupModal />}
         <Toaster />
       </div>
     </ThemeProvider>
