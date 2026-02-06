@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, BookOpen, MessageSquare, Shield, Mail, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import PostComposer from '../components/PostComposer';
 
 export default function HomePage() {
   const { identity, login, loginStatus } = useInternetIdentity();
@@ -208,18 +209,10 @@ export default function HomePage() {
               Have questions or interested in advertising opportunities? Get in touch with us.
             </p>
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <a
-                href={`mailto:${contactEmail}`}
-                className="text-lg font-medium text-primary hover:underline"
-              >
+              <a href={`mailto:${contactEmail}`} className="text-lg font-medium text-primary hover:underline">
                 {contactEmail}
               </a>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopyEmail}
-                className="gap-2"
-              >
+              <Button variant="outline" size="sm" onClick={handleCopyEmail} className="gap-2">
                 <Copy className="h-4 w-4" />
                 Copy Email
               </Button>
@@ -227,6 +220,41 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {isAuthenticated && (
+        <section className="bg-background py-16 md:py-20">
+          <div className="container">
+            <div className="mx-auto max-w-2xl">
+              <div className="mb-6 text-center">
+                <h2 className="mb-2 text-2xl font-bold md:text-3xl">Share Your Thoughts</h2>
+                <p className="text-muted-foreground">Create a post to connect with the ICSE community</p>
+              </div>
+              <PostComposer />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {!isAuthenticated && (
+        <section className="bg-background py-16 md:py-20">
+          <div className="container">
+            <div className="mx-auto max-w-2xl text-center">
+              <div className="mb-6 flex justify-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                  <MessageSquare className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              <h2 className="mb-4 text-2xl font-bold md:text-3xl">Join the Conversation</h2>
+              <p className="mb-6 text-muted-foreground">
+                Sign in to share posts, connect with students, and be part of the ICSE community.
+              </p>
+              <Button size="lg" onClick={login} disabled={loginStatus === 'logging-in'}>
+                {loginStatus === 'logging-in' ? 'Logging in...' : 'Login to Post'}
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

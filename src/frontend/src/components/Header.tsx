@@ -10,8 +10,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Home, Users, BookOpen, MessageSquare, Shield, Menu } from 'lucide-react';
+import { Home, Users, BookOpen, MessageSquare, Shield, Menu, AlertCircle } from 'lucide-react';
 import type { PageView } from '../App';
+import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 interface HeaderProps {
   currentPage: PageView;
@@ -19,13 +21,24 @@ interface HeaderProps {
 }
 
 export default function Header({ currentPage, onNavigate }: HeaderProps) {
-  const { login, clear, loginStatus, identity } = useInternetIdentity();
+  const { login, clear, loginStatus, identity, loginError } = useInternetIdentity();
   const { data: userProfile } = useGetCallerUserProfile();
   const { data: isAdmin } = useIsCallerAdmin();
   const queryClient = useQueryClient();
 
   const isAuthenticated = !!identity;
-  const disabled = loginStatus === 'logging-in';
+  const disabled = loginStatus === 'logging-in' || loginStatus === 'initializing';
+
+  // Show error toast when login fails
+  useEffect(() => {
+    if (loginStatus === 'loginError' && loginError) {
+      toast.error('Authentication Error', {
+        description: loginError.message,
+        duration: 5000,
+        icon: <AlertCircle className="h-4 w-4" />,
+      });
+    }
+  }, [loginStatus, loginError]);
 
   const handleAuth = async () => {
     if (isAuthenticated) {
@@ -33,15 +46,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
       queryClient.clear();
       onNavigate('home');
     } else {
-      try {
-        await login();
-      } catch (error: any) {
-        console.error('Login error:', error);
-        if (error.message === 'User is already authenticated') {
-          await clear();
-          setTimeout(() => login(), 300);
-        }
-      }
+      login();
     }
   };
 
@@ -54,6 +59,12 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
   ];
 
   const visibleNavItems = navItems.filter((item) => !item.authRequired || isAuthenticated);
+
+  const getButtonText = () => {
+    if (loginStatus === 'initializing') return 'Initializing...';
+    if (loginStatus === 'logging-in') return 'Signing in...';
+    return isAuthenticated ? 'Logout' : 'Sign In';
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -116,7 +127,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             </DropdownMenu>
           ) : (
             <Button onClick={handleAuth} disabled={disabled}>
-              {loginStatus === 'logging-in' ? 'Logging in...' : 'Login'}
+              {getButtonText()}
             </Button>
           )}
 

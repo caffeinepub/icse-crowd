@@ -2,6 +2,7 @@ import Array "mo:core/Array";
 import Iter "mo:core/Iter";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
+import Nat "mo:core/Nat";
 import Map "mo:core/Map";
 import List "mo:core/List";
 import Order "mo:core/Order";
@@ -11,9 +12,6 @@ import Storage "blob-storage/Storage";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
-import Nat "mo:core/Nat";
-
-
 
 actor {
   include MixinStorage();
@@ -74,7 +72,7 @@ actor {
     likes : [Principal];
   };
 
-  type Comment = {
+  public type Comment = {
     id : Nat;
     postId : Nat;
     author : Principal;
@@ -137,8 +135,26 @@ actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
+  // Maximum video size: 600MB in bytes
+  let MAX_VIDEO_SIZE_BYTES : Nat = 600 * 1024 * 1024;
+
   func generateUniqueId() : Nat {
     Time.now().toNat();
+  };
+
+  func principalEquals(a : Principal, b : Principal) : Bool {
+    Principal.equal(a, b);
+  };
+
+  func validateVideoSize(video : ?Storage.ExternalBlob) : () {
+    switch (video) {
+      case (null) { /* No video, validation passes */ };
+      case (?blob) {
+        if (blob.size() > MAX_VIDEO_SIZE_BYTES) {
+          Runtime.trap("Video upload rejected: File size exceeds the maximum allowed limit of 600MB. Please upload a smaller video file.");
+        };
+      };
+    };
   };
 
   module FriendsList {
@@ -170,11 +186,7 @@ actor {
     };
   };
 
-  func principalEquals(a : Principal, b : Principal) : Bool {
-    Principal.equal(a, b);
-  };
-
-  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+  public shared ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view profiles");
     };
@@ -188,9 +200,9 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own profile");
+  public shared ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view profiles");
     };
     userProfiles.get(user);
   };
@@ -213,7 +225,14 @@ actor {
     userProfiles.add(caller, newProfile);
   };
 
+  func checkUserProfileExists(caller : Principal) : () {
+    if (userProfiles.get(caller) == null) {
+      Runtime.trap("User must have a profile to create posts and comments!");
+    };
+  };
+
   public shared ({ caller }) func sendFriendRequest(to : Principal) : async () {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can send friend requests");
     };
@@ -245,6 +264,7 @@ actor {
   };
 
   public shared ({ caller }) func acceptFriendRequest(from : Principal) : async () {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can accept friend requests");
     };
@@ -261,9 +281,12 @@ actor {
   };
 
   public shared ({ caller }) func createPost(content : Text, image : ?Storage.ExternalBlob, video : ?Storage.ExternalBlob, document : ?Storage.ExternalBlob) : async () {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create posts");
     };
+
+    validateVideoSize(video);
 
     let id = generateUniqueId();
     let post : Post = {
@@ -281,6 +304,7 @@ actor {
   };
 
   public shared ({ caller }) func likePost(postId : Nat) : async () {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can like posts");
     };
@@ -297,6 +321,7 @@ actor {
   };
 
   public shared ({ caller }) func addComment(postId : Nat, content : Text) : async () {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can add comments");
     };
@@ -314,7 +339,8 @@ actor {
     comments.add(id, comment);
   };
 
-  public query ({ caller }) func getFeed() : async [Post] {
+  public shared ({ caller }) func getFeed() : async [Post] {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view feed");
     };
@@ -322,6 +348,7 @@ actor {
   };
 
   public shared ({ caller }) func sendMessage(to : Principal, content : Text) : async () {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can send messages");
     };
@@ -348,9 +375,16 @@ actor {
   };
 
   public shared ({ caller }) func createStudyGroup(name : Text, description : Text) : async () {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create study groups");
     };
+
+    // Ensure the group name is not empty
+    if (name.size() == 0) {
+      Runtime.trap("Group name cannot be empty");
+    };
+
     let id = generateUniqueId();
     let group : StudyGroup = {
       id;
@@ -363,6 +397,7 @@ actor {
   };
 
   public shared ({ caller }) func addSharedNote(groupId : Nat, content : Text) : async () {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can add shared notes");
     };
@@ -386,6 +421,7 @@ actor {
   };
 
   public shared ({ caller }) func createForumPost(subject : Text, content : Text) : async () {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create forum posts");
     };
@@ -405,6 +441,7 @@ actor {
     reportedContent : ?Text,
     reason : Text,
   ) : async () {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can report content");
     };
@@ -422,6 +459,7 @@ actor {
   };
 
   public shared ({ caller }) func blockUser(user : Principal) : async () {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can block other users");
     };
@@ -440,7 +478,7 @@ actor {
     };
   };
 
-  public query ({ caller }) func getReports() : async [Report] {
+  public shared ({ caller }) func getReports() : async [Report] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only moderators and admins can view reports");
     };
@@ -490,7 +528,7 @@ actor {
     forumPosts.remove(forumId);
   };
 
-  public query ({ caller }) func getAllUsers() : async [UserProfile] {
+  public shared ({ caller }) func getAllUsers() : async [UserProfile] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view all users");
     };
@@ -498,9 +536,14 @@ actor {
   };
 
   public shared ({ caller }) func updatePost(postId : Nat, content : Text, image : ?Storage.ExternalBlob, video : ?Storage.ExternalBlob, document : ?Storage.ExternalBlob) : async () {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can update posts");
     };
+
+    // Validate video size before accepting the upload
+    validateVideoSize(video);
+
     switch (posts.get(postId)) {
       case (null) { Runtime.trap("Post not found") };
       case (?post) {
@@ -520,6 +563,7 @@ actor {
   };
 
   public shared ({ caller }) func deletePostByAuthor(postId : Nat) : async () {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can delete their own posts");
     };
@@ -534,21 +578,24 @@ actor {
     };
   };
 
-  public query ({ caller }) func getUserPosts(user : Principal) : async [Post] {
+  public shared ({ caller }) func getUserPosts(user : Principal) : async [Post] {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view posts");
     };
     posts.values().toArray().filter(func(post) { post.author == user });
   };
 
-  public query ({ caller }) func getUserComments(user : Principal) : async [Comment] {
+  public shared ({ caller }) func getUserComments(user : Principal) : async [Comment] {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view comments");
     };
     comments.values().toArray().filter(func(comment) { comment.author == user });
   };
 
-  public query ({ caller }) func getPostComments(postId : Nat) : async [Comment] {
+  public shared ({ caller }) func getPostComments(postId : Nat) : async [Comment] {
+    checkUserProfileExists(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view comments");
     };

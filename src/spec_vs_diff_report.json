@@ -1,46 +1,102 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-03T11:40:27.117Z",
-  "summary": "HomePage.tsx adds clipboard-copy logic for the contact email and uses toast notifications, but the diff excerpt does not show the new bottom section JSX nor the required mailto link; additional unrelated documentation/state summary files were updated.",
+  "generatedAt": "2026-02-06T08:47:51.796Z",
+  "summary": "The diff implements frontend username resolution for post/comment authors (with fallback labels and avatar initials) via a new React Query hook, and adds frontend profile-gating for creating posts. However, backend enforcement (trap on missing profile) is not evidenced in the provided backend diff excerpt, and several unrelated UI/UX/theme changes appear to have been made beyond the request scope.",
   "missing_requirements": [
     {
-      "id": "REQ-7",
-      "requirement": "Add a new final section at the very bottom of the Home page after all existing sections that displays: \"FOR INQUIRIES & ADVERTISING: aryananilshinde6122009@gmail.com\".",
-      "reason": "The provided HomePage.tsx diff is truncated before any new bottom/final section is shown; the excerpt only shows existing hero/features sections and helper logic, not the required final callout section or its exact label text.",
+      "id": "REQ-12",
+      "requirement": "Enforce on the backend that a user must have an existing profile before they can create a post or add a comment (createPost/addComment trap with clear English message when userProfiles.containsKey(caller) is false).",
+      "reason": "The provided `backend/main.mo` excerpt does not show any changes to `createPost` or `addComment`, nor any profile existence checks/traps. Because the backend file is truncated and the summary does not explicitly mention this enforcement, implementation cannot be confirmed from the diff evidence.",
       "evidence": [
-        "frontend/src/pages/HomePage.tsx (truncated excerpt does not include the final section JSX)"
+        "backend/main.mo (truncated excerpt shows types/helpers but not createPost/addComment changes)"
       ]
     },
     {
-      "id": "REQ-8",
-      "requirement": "Render the email address as a clickable mailto link and provide a copy-to-clipboard affordance with success/failure communicated via existing toast patterns.",
-      "reason": "Copy-to-clipboard logic and toast feedback are present, but the diff excerpt does not show any UI affordance (button/icon) nor a mailto anchor/link being rendered.",
+      "id": "REQ-13",
+      "requirement": "Ensure the frontend prevents posting/commenting when the current user has not created a profile, aligning UI with backend enforcement (including handling backend 'profile required' errors as readable English messages).",
+      "reason": "PostComposer includes a profile check and English toast, but the acceptance criteria also require that the existing mandatory profile setup modal continues to block interaction globally (no routes/pages behind it) and that comment submission is disabled/gated in edge cases. The diff does not include evidence of App-level modal gating behavior or the comment-submit disablement behavior (FeedPostCard is truncated), so full REQ-13 compliance cannot be verified.",
       "evidence": [
-        "frontend/src/pages/HomePage.tsx (shows handleCopyEmail + toast, but no mailto/link JSX in excerpt)"
+        "frontend/src/components/PostComposer.tsx (profile check before posting)",
+        "frontend/src/components/FeedPostCard.tsx (truncated; cannot confirm comment submit disablement/gating)",
+        "frontend/src/App.tsx (not shown as modified; cannot confirm global modal gating behavior)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Updates to frontend-file-summaries.txt describing many unrelated component/page changes (e.g., updated useQueries attachments support, Header branding changes, theme changes, etc.).",
-      "reason": "The BuildRequest is limited to adding an inquiries/advertising contact section on the Home page UI only; these additional described changes are not requested. The only actual code diff shown is HomePage.tsx; the other changes appear as documentation/summary updates.",
+      "description": "Global theme/color system changes (switch to OKLCH red/white palette).",
+      "reason": "Not requested by any requirement; request explicitly limited scope to username display and profile gating without redesigning the entire feed UI.",
       "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend-file-summaries.txt (mentions `frontend/src/index.css` theme replacement)"
       ]
     },
     {
-      "description": "Project state/version summary update unrelated to adding a Home page contact section.",
-      "reason": "Not requested by the BuildRequest (Home page UI only).",
+      "description": "Header authentication UX enhancements (toast notifications, improved button states, visual feedback).",
+      "reason": "Not requested by REQ-10 through REQ-13.",
       "evidence": [
-        "project_state.json (truncated)"
+        "frontend-file-summaries.txt (mentions `frontend/src/components/Header.tsx` changes)"
+      ]
+    },
+    {
+      "description": "Footer content changes including developer credit.",
+      "reason": "Not requested by REQ-10 through REQ-13.",
+      "evidence": [
+        "frontend-file-summaries.txt (mentions `frontend/src/components/Footer.tsx` change)"
+      ]
+    },
+    {
+      "description": "Home page changes (new sections and showing PostComposer or login CTA).",
+      "reason": "Not requested; outside the feed username/profile-gating scope.",
+      "evidence": [
+        "frontend-file-summaries.txt (mentions `frontend/src/pages/HomePage.tsx` changes)"
+      ]
+    },
+    {
+      "description": "StudyGroupsPage create-flow hardening and expanded error reporting.",
+      "reason": "Not requested by REQ-10 through REQ-13.",
+      "evidence": [
+        "frontend-file-summaries.txt (mentions `frontend/src/pages/StudyGroupsPage.tsx` changes)"
+      ]
+    },
+    {
+      "description": "ModerationPage enum comparison fixes for report status filtering/updates.",
+      "reason": "Not requested by REQ-10 through REQ-13.",
+      "evidence": [
+        "frontend-file-summaries.txt (mentions `frontend/src/pages/ModerationPage.tsx` changes)"
+      ]
+    },
+    {
+      "description": "Internet Identity hook improvements (fallback II URL, state management, auth client recreation).",
+      "reason": "Not requested; auth provider changes were explicitly listed as non-goals.",
+      "evidence": [
+        "frontend-file-summaries.txt (mentions `frontend/src/hooks/useInternetIdentity.ts` changes)"
+      ]
+    },
+    {
+      "description": "Actor initialization hook behavior changes (query invalidation/refetch behavior adjustments).",
+      "reason": "Not requested by REQ-10 through REQ-13.",
+      "evidence": [
+        "frontend-file-summaries.txt (mentions `frontend/src/hooks/useActor.ts` changes)"
+      ]
+    },
+    {
+      "description": "HTML title/meta updates (page title 'ICSE Crowd').",
+      "reason": "Not requested by REQ-10 through REQ-13.",
+      "evidence": [
+        "frontend-file-summaries.txt (mentions `frontend/index.html` updates)"
       ]
     }
   ],
   "confidence": 0.62,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/pages/HomePage.tsx",
+    "frontend/src/components/FeedPostCard.tsx",
+    "frontend/src/components/PostComposer.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/FeedPage.tsx",
+    "frontend/src/utils/userDisplay.ts",
     "project_state.json"
   ]
 }

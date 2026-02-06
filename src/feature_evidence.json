@@ -2,10 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-a-new-final-section-at-the-very-bottom-of-the-home-page-frontend-src-pages-homepage-tsx-after-all-existing-sections-that-displays-an-inquiries-advertising-contact-callout-matching-the-content-shown-in-the-provided-image-for-inquiries-advertising-aryananilshinde6122009-gmail-com",
-      "featureTitle": "Add a new final section at the very bottom of the Home page (frontend/src/pages/HomePage.tsx), after all existing sections, that displays an inquiries/advertising contact callout matching the content shown in the provided image: \"FOR INQUIRIES & ADVERTISING: aryananilshinde6122009@gmail.com\".",
+      "featureId": "feature-replace-principal-placeholder-author-strings-in-the-feed-ui-with-the-author-s-profile-username-for-both-posts-and-comments",
+      "featureTitle": "Replace principal/placeholder author strings in the feed UI with the author’s profile username for both posts and comments.",
       "files": [
-        "frontend/src/pages/HomePage.tsx"
+        "frontend/src/components/FeedPostCard.tsx",
+        "frontend/src/utils/userDisplay.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -17,15 +18,16 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-7"
+        "REQ-10"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-in-the-new-home-page-bottom-section-render-the-email-address-as-a-clickable-mailto-link-mailto-aryananilshinde6122009-gmail-com-and-provide-a-simple-ui-affordance-to-copy-the-email-to-clipboard",
-      "featureTitle": "In the new Home page bottom section, render the email address as a clickable mailto link (mailto:aryananilshinde6122009@gmail.com) and provide a simple UI affordance to copy the email to clipboard.",
+      "featureId": "feature-add-react-query-data-access-to-retrieve-a-user-profile-for-an-arbitrary-principal-and-reuse-it-to-resolve-usernames-in-the-feed",
+      "featureTitle": "Add React Query data access to retrieve a user profile for an arbitrary principal and reuse it to resolve usernames in the feed.",
       "files": [
-        "frontend/src/pages/HomePage.tsx"
+        "frontend/src/components/FeedPostCard.tsx",
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -37,7 +39,29 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-8"
+        "REQ-11"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-the-frontend-prevents-posting-commenting-when-the-current-user-has-not-created-a-profile-aligning-the-ui-behavior-with-the-backend-enforcement",
+      "featureTitle": "Ensure the frontend prevents posting/commenting when the current user has not created a profile, aligning the UI behavior with the backend enforcement.",
+      "files": [
+        "frontend/src/components/FeedPostCard.tsx",
+        "frontend/src/components/PostComposer.tsx",
+        "frontend/src/pages/FeedPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-13"
       ],
       "confidence": "high"
     }

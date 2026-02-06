@@ -1,7 +1,31 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 9,
+  "projectStateVersion": 43,
   "summary": "ICSE Crowd is a full-stack Internet Computer (ICP) dapp: a social + academic collaboration platform for ICSE students. The frontend is a React/Tailwind app using Internet Identity for authentication and TanStack React Query for data fetching. The backend is a Motoko canister that provides role-based access control (admin/user/guest), user profiles, a social feed (posts with optional images, likes, comments), basic friend requests, direct messaging, study groups and shared notes, a simple forum posting feature, and a moderation/reporting system (reports, status workflow, admin deletions). The project also includes a Caffeine blob-storage mixin for handling externally stored blobs, gateway authorization, and storage maintenance endpoints.",
+  "architectural_notes": [
+    "Frontend uses React with a global InternetIdentityProvider (AuthClient) context to manage identity, login/logout, and persisted sessions.",
+    "TanStack React Query wraps backend calls into hooks (queries/mutations) with cache invalidation keyed by resource (e.g., ['feed'], ['reports']).",
+    "An actor factory pattern is used: useActor creates an anonymous actor when unauthenticated, or an authenticated actor with agent identity when logged in.",
+    "Backend uses Motoko 'mixin' modules to compose cross-cutting concerns: MixinAuthorization for access control initialization/role checks and MixinStorage for Caffeine blob-storage maintenance APIs.",
+    "Role-based access control is implemented in backend/authorization/access-control.mo; initialization uses an admin token from an environment variable and a user-supplied secret to assign the first admin.",
+    "Backend data is stored in mo:core/Map maps keyed by Principal or Nat, with simple timestamp-based ID generation.",
+    "Frontend UI is built with Tailwind + shadcn-style components, next-themes for dark/light mode, and OKLCH CSS variables for theme tokens.",
+    "Sensitive admin token acquisition is designed around URL hash secrets + sessionStorage persistence (frontend/src/utils/urlParams.ts), then passed into backend initialization.",
+    "Image posts use an ExternalBlob abstraction that supports upload progress callbacks and direct URL rendering on the client.",
+    "Project now includes a reusable build-template (React + ICP canister configs, scripts, and UI component baseline) used to scaffold/standardize deployments and frontend tooling."
+  ],
+  "known_issues": [
+    "ChatPage uses the admin-only getAllUsers endpoint to populate contacts; non-admin users will trap with \"Unauthorized: Only admins can view all users\". A user-accessible contacts/friends endpoint is missing.",
+    "Friend request acceptance only removes the request; there is no persistent 'friends list' or membership relation created, and there are no endpoints/UI for listing pending requests or friends.",
+    "Messaging is write-only from the UI: backend stores chatMessages but there is no query endpoint to fetch conversation history; ChatPage displays only a placeholder conversation view.",
+    "Comments can be added but are not retrievable/displayed: backend stores comments, but feed retrieval returns only posts; no getCommentsByPost API exists and UI does not render comments.",
+    "ID generation uses Time.now().toNat() and may collide under rapid successive operations (multiple events within the same timestamp granularity).",
+    "Backend maps are defined as non-stable in-memory structures; without stable variables/upgrade hooks, data likely will not persist across canister upgrades.",
+    "Some hooks/pages imply features without UI wiring (reporting/blocking from user perspective, role assignment); admin role assignment exists in backend but no frontend hook/UI is provided.",
+    "Authentication/login issue: clicking Sign In has a long delay before failing with an authentication error (Internet Identity flow suspected/misconfigured).",
+    "Authentication/login issue detail update: Sign In delay occurs every time; after the delay an authentication error message appears consistently."
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "IF-1",
@@ -197,18 +221,83 @@
       "version": 1
     },
     {
-      "id": "feature-add-a-new-final-section-at-the-very-bottom-of-the-home-page-frontend-src-pages-homepage-tsx-after-all-existing-sections-that-displays-an-inquiries-advertising-contact-callout-matching-the-content-shown-in-the-provided-image-for-inquiries-advertising-aryananilshinde6122009-gmail-com",
-      "title": "Add a new final section at the very bottom of the Home page (frontend/src/pages/HomePage.tsx), after all existing sections, that displays an inquiries/advertising contact callout matching the content shown in the provided image: \"FOR INQUIRIES & ADVERTISING: aryananilshinde6122009@gmail.com\".",
+      "id": "IF-19",
+      "title": "Study groups listing, detail retrieval, and membership management",
+      "synonyms": [
+        "listStudyGroups",
+        "getStudyGroup",
+        "joinStudyGroup",
+        "leaveStudyGroup"
+      ],
+      "description": "Backend now exposes query APIs to list study groups visible to the caller and fetch a single group by id, plus membership management endpoints to join/leave groups. Membership checks are enforced for group-only actions. Frontend Study Groups experience is upgraded from placeholders to render real groups and support join/leave and group detail views.",
+      "reqIds": [
+        "REQ-1",
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-20",
+      "title": "Video and document attachments supported via blob storage (in addition to images)",
+      "synonyms": [
+        "attachments",
+        "video upload",
+        "document upload"
+      ],
+      "description": "Backend data model and APIs now support attachments beyond images, including videos and documents using the existing blob storage approach. Attachments include blob reference plus filename and MIME type; content creation flows accept these attachments for feed and study-group content, and the frontend supports selection, upload progress, and rendering (inline video playback and document open/download links).",
+      "reqIds": [
+        "REQ-2",
+        "REQ-3",
+        "REQ-5",
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-expose-a-reliable-canister-api-for-retrieving-comments-for-a-given-post-id-and-ensure-the-generated-frontend-canister-bindings-include-the-comment-type-and-the-getpostcomments-method",
+      "title": "Expose a reliable canister API for retrieving comments for a given post ID, and ensure the generated frontend canister bindings include the Comment type and the getPostComments method.",
       "reqIds": [
         "REQ-7"
       ],
       "version": 1
     },
     {
-      "id": "feature-in-the-new-home-page-bottom-section-render-the-email-address-as-a-clickable-mailto-link-mailto-aryananilshinde6122009-gmail-com-and-provide-a-simple-ui-affordance-to-copy-the-email-to-clipboard",
-      "title": "In the new Home page bottom section, render the email address as a clickable mailto link (mailto:aryananilshinde6122009@gmail.com) and provide a simple UI affordance to copy the email to clipboard.",
+      "id": "feature-add-a-react-query-hook-to-fetch-comments-for-a-specific-post-keyed-by-postid-and-update-comment-creation-flow-to-invalidate-refetch-the-relevant-post-s-comments-after-successfully-adding-a-comment",
+      "title": "Add a React Query hook to fetch comments for a specific post (keyed by postId), and update comment creation flow to invalidate/refetch the relevant post’s comments after successfully adding a comment.",
       "reqIds": [
         "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-render-fetched-comments-in-the-feed-ui-when-a-user-expands-a-post-s-comments-section-display-a-list-of-comments-author-content-relative-timestamp-show-a-loading-indicator-while-fetching-show-an-empty-state-when-there-are-no-comments-and-show-a-readable-error-message-if-fetching-fails",
+      "title": "Render fetched comments in the feed UI: when a user expands a post’s comments section, display a list of comments (author + content + relative timestamp), show a loading indicator while fetching, show an empty-state when there are no comments, and show a readable error message if fetching fails.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-principal-placeholder-author-strings-in-the-feed-ui-with-the-author-s-profile-username-for-both-posts-and-comments",
+      "title": "Replace principal/placeholder author strings in the feed UI with the author’s profile username for both posts and comments.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-react-query-data-access-to-retrieve-a-user-profile-for-an-arbitrary-principal-and-reuse-it-to-resolve-usernames-in-the-feed",
+      "title": "Add React Query data access to retrieve a user profile for an arbitrary principal and reuse it to resolve usernames in the feed.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-frontend-prevents-posting-commenting-when-the-current-user-has-not-created-a-profile-aligning-the-ui-behavior-with-the-backend-enforcement",
+      "title": "Ensure the frontend prevents posting/commenting when the current user has not created a profile, aligning the UI behavior with the backend enforcement.",
+      "reqIds": [
+        "REQ-13"
       ],
       "version": 1
     }
@@ -222,99 +311,27 @@
     },
     {
       "id": "AR-2",
-      "summary": "Add support for posting/uploading videos in the social feed and/or groups",
+      "summary": "Fix comments visibility: add backend API to fetch comments per post and wire into feed UI to display comments",
       "reqIds": [],
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "AR-3",
-      "summary": "Add support for posting/uploading documents (files) in the social feed and/or groups",
+      "summary": "Display poster username (profile display name) for both posts and comments; require users to create a profile before they can post or comment",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Add backend APIs to properly support “group study sessions” beyond basic group creation by implementing study group listing and detail retrieval, including: (a) a query to list all study groups visible to the caller, (b) a query to fetch a single study group by id, and (c) membership management so a user can join and leave a study group, with membership checks enforced for group-only content actions.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Extend the backend data model and APIs to support posting videos and documents as attachments (in addition to existing images) using the existing blob storage approach, including: (a) defining an attachment representation that supports video and document file types (at minimum: blob reference + filename + MIME type), and (b) updating content-creation APIs to accept these attachments for both the social feed and study groups.",
-      "reqIds": [
-        "REQ-2"
-      ],
       "status": "pending"
     },
     {
       "id": "AR-6",
-      "summary": "Add backend query APIs for study-group content so the frontend can render real group sessions, including queries to list a group’s posts/notes (with attachments) and display them in chronological order.",
+      "summary": "Enforce on the backend that a user must have an existing profile before they can create a post or add a comment.",
       "reqIds": [
-        "REQ-3"
+        "REQ-12"
       ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Upgrade the Study Groups frontend page from placeholder content to a functional experience: (a) render the real list of study groups from the backend, (b) allow creating a group (existing flow), (c) allow joining/leaving groups, and (d) provide a group detail view that shows the group description, member count, and a feed of group posts/notes.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Add UI and React Query hooks to create study-group posts/notes with optional attachments (video/document/image), including file selection, upload progress feedback, and rendering attachments in the group detail view (videos playable inline; documents available via a clear download/open link showing filename).",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Enhance the social Feed post creation UI to support attaching videos and documents in addition to images, and update feed rendering to display video attachments inline and document attachments as downloadable/openable links with filenames.",
-      "reqIds": [
-        "REQ-6"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "Add an entry/section at the bottom of the Home page that exposes the new video/document posting feature (e.g., UI element or prompt placed last on the home page).",
-      "reqIds": [],
       "status": "pending"
     }
   ],
-  "architecturalNotes": [
-    "Frontend uses React with a global InternetIdentityProvider (AuthClient) context to manage identity, login/logout, and persisted sessions.",
-    "TanStack React Query wraps backend calls into hooks (queries/mutations) with cache invalidation keyed by resource (e.g., ['feed'], ['reports']).",
-    "An actor factory pattern is used: useActor creates an anonymous actor when unauthenticated, or an authenticated actor with agent identity when logged in.",
-    "Backend uses Motoko 'mixin' modules to compose cross-cutting concerns: MixinAuthorization for access control initialization/role checks and MixinStorage for Caffeine blob-storage maintenance APIs.",
-    "Role-based access control is implemented in backend/authorization/access-control.mo; initialization uses an admin token from an environment variable and a user-supplied secret to assign the first admin.",
-    "Backend data is stored in mo:core/Map maps keyed by Principal or Nat, with simple timestamp-based ID generation.",
-    "Frontend UI is built with Tailwind + shadcn-style components, next-themes for dark/light mode, and OKLCH CSS variables for theme tokens.",
-    "Sensitive admin token acquisition is designed around URL hash secrets + sessionStorage persistence (frontend/src/utils/urlParams.ts), then passed into backend initialization.",
-    "Image posts use an ExternalBlob abstraction that supports upload progress callbacks and direct URL rendering on the client."
-  ],
-  "knownIssues": [
-    "ChatPage uses the admin-only getAllUsers endpoint to populate contacts; non-admin users will trap with \"Unauthorized: Only admins can view all users\". A user-accessible contacts/friends endpoint is missing.",
-    "Friend request acceptance only removes the request; there is no persistent 'friends list' or membership relation created, and there are no endpoints/UI for listing pending requests or friends.",
-    "Messaging is write-only from the UI: backend stores chatMessages but there is no query endpoint to fetch conversation history; ChatPage displays only a placeholder conversation view.",
-    "Comments can be added but are not retrievable/displayed: backend stores comments, but feed retrieval returns only posts; no getCommentsByPost API exists and UI does not render comments.",
-    "StudyGroupsPage and ForumPage are largely placeholders for listing; backend supports createStudyGroup/addSharedNote/createForumPost, but there are no query endpoints for listing groups/notes/forum posts and UI shows static examples.",
-    "ID generation uses Time.now().toNat() and may collide under rapid successive operations (multiple events within the same timestamp granularity).",
-    "Backend maps are defined as non-stable in-memory structures; without stable variables/upgrade hooks, data likely will not persist across canister upgrades.",
-    "Authorization initialization depends on the CAFFEINE_ADMIN_TOKEN environment variable; canister traps if it is not set (backend/authorization/MixinAuthorization.mo).",
-    "Blob storage cashier principal env var name appears misspelled: \"CAFFFEINE_STORAGE_CASHIER_PRINCIPAL\" (extra 'F'), which may cause runtime traps if deployment expects a different variable name.",
-    "Some hooks/pages imply features without UI wiring (reporting/blocking from user perspective, role assignment); admin role assignment exists in backend but no frontend hook/UI is provided."
-  ],
-  "isFixRequest": false,
   "gameProjectType": "none",
   "projectName": "ICSE Crowd",
-  "clarification_mode": "instant",
-  "clarification_rounds": 0,
-  "requiresBackendChanges": false,
-  "requiresFrontendChanges": true
+  "clarification_mode": "pro",
+  "clarification_rounds": 0
 }

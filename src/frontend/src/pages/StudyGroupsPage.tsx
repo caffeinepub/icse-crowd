@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useCreateStudyGroup } from '../hooks/useQueries';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useActor } from '../hooks/useActor';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -8,15 +10,33 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Users, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
+import { normalizeICError } from '../utils/icErrors';
 
 export default function StudyGroupsPage() {
+  const { identity } = useInternetIdentity();
+  const { actor, isFetching: actorFetching } = useActor();
   const createStudyGroup = useCreateStudyGroup();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
 
+  const isAuthenticated = !!identity;
+  const isActorReady = !!actor && !actorFetching;
+
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check authentication first
+    if (!isAuthenticated) {
+      toast.error('Please log in to create a study group');
+      return;
+    }
+
+    // Check actor readiness
+    if (!isActorReady) {
+      toast.error('System is initializing, please wait a moment');
+      return;
+    }
 
     if (!groupName.trim()) {
       toast.error('Please enter a group name');
@@ -29,10 +49,20 @@ export default function StudyGroupsPage() {
       setGroupName('');
       setGroupDescription('');
       setIsDialogOpen(false);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create study group');
+    } catch (error: unknown) {
+      const errorMessage = normalizeICError(error);
+      
+      // Check for authorization-specific errors
+      if (errorMessage.toLowerCase().includes('unauthorized')) {
+        toast.error('You are not authorized to create study groups. Please ensure you are logged in with a valid account.');
+      } else {
+        toast.error(errorMessage);
+      }
     }
   };
+
+  // Disable the submit button if actor is not ready or user is not authenticated
+  const isSubmitDisabled = createStudyGroup.isPending || !isActorReady || !isAuthenticated;
 
   return (
     <div className="container py-8">
@@ -43,7 +73,7 @@ export default function StudyGroupsPage() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button disabled={!isAuthenticated}>
               <Plus className="mr-2 h-4 w-4" />
               Create Group
             </Button>
@@ -73,8 +103,14 @@ export default function StudyGroupsPage() {
                   rows={3}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={createStudyGroup.isPending}>
-                {createStudyGroup.isPending ? 'Creating...' : 'Create Group'}
+              <Button type="submit" className="w-full" disabled={isSubmitDisabled}>
+                {!isAuthenticated
+                  ? 'Login Required'
+                  : !isActorReady
+                  ? 'Initializing...'
+                  : createStudyGroup.isPending
+                  ? 'Creating...'
+                  : 'Create Group'}
               </Button>
             </form>
           </DialogContent>
@@ -91,7 +127,11 @@ export default function StudyGroupsPage() {
             <p className="mb-4 text-sm text-muted-foreground">
               Create your first study group to start collaborating
             </p>
-            <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(true)}
+              disabled={!isAuthenticated}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Create Group
             </Button>

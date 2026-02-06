@@ -1,53 +1,95 @@
 {
   "kind": "build_request",
-  "title": "Add inquiries & advertising contact section to the bottom of the Home page",
+  "title": "Display profile usernames for posts/comments and require profile before posting or commenting",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-7",
-      "text": "Add a new final section at the very bottom of the Home page (frontend/src/pages/HomePage.tsx), after all existing sections, that displays an inquiries/advertising contact callout matching the content shown in the provided image: \"FOR INQUIRIES & ADVERTISING: aryananilshinde6122009@gmail.com\".",
+      "id": "REQ-10",
+      "text": "Replace principal/placeholder author strings in the feed UI with the author’s profile username for both posts and comments.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-4",
+          "msg-6"
         ],
         "quotes": [
-          "Add this at last on the home page"
+          "Show the person name who is posting. Instead of those random spelling",
+          "Show the username in both."
         ]
       },
       "acceptanceCriteria": [
-        "The Home page contains a new last section rendered after the current final CTA section (or after the last section when authenticated).",
-        "The section includes the exact email text: aryananilshinde6122009@gmail.com.",
-        "The section uses English user-facing text and clearly labels the email as being for inquiries & advertising."
+        "In `frontend/src/components/FeedPostCard.tsx`, the post header shows the author’s profile `name` (username) instead of `post.author.toString().slice(0, 10)`.",
+        "In `frontend/src/components/FeedPostCard.tsx`, each rendered comment shows the comment author’s profile `name` (username) instead of `comment.author.toString().slice(0, 10)`.",
+        "If a profile lookup fails or returns null, the UI shows a clear fallback label in English (e.g., \"Unknown user\") rather than a truncated principal.",
+        "Avatar fallbacks use initials derived from the username when available (for both post and comment author avatars)."
       ]
     },
     {
-      "id": "REQ-8",
-      "text": "In the new Home page bottom section, render the email address as a clickable mailto link (mailto:aryananilshinde6122009@gmail.com) and provide a simple UI affordance to copy the email to clipboard.",
+      "id": "REQ-11",
+      "text": "Add React Query data access to retrieve a user profile for an arbitrary principal and reuse it to resolve usernames in the feed.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-4",
+          "msg-6"
         ],
         "quotes": [
-          "Add this at last on the home page"
+          "Show the person name who is posting. Instead of those random spelling",
+          "Show the username in both."
         ]
       },
       "acceptanceCriteria": [
-        "Clicking the email opens the user’s default mail client via a mailto link.",
-        "A copy action is available and copies \"aryananilshinde6122009@gmail.com\" to the clipboard.",
-        "Copy success/failure is communicated using the app’s existing toast/feedback patterns."
+        "A new hook is added in `frontend/src/hooks/useQueries.ts` to fetch `getUserProfile(principal)` and cache it with a stable queryKey that includes the principal string (e.g., `['userProfile', principalStr]`).",
+        "`FeedPostCard` uses the new hook (or equivalent shared query logic) to display usernames for the post author and comment authors without introducing infinite re-render loops.",
+        "User-facing error handling remains in English and does not crash the feed if a profile fetch fails."
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "text": "Enforce on the backend that a user must have an existing profile before they can create a post or add a comment.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Who has not prepared profile should not be allowed to post without creating profile"
+        ]
+      },
+      "acceptanceCriteria": [
+        "In `backend/main.mo`, `createPost` traps with a clear English message if `userProfiles.containsKey(caller)` is false.",
+        "In `backend/main.mo`, `addComment` traps with a clear English message if `userProfiles.containsKey(caller)` is false.",
+        "Existing behavior for authorized users who do have profiles remains unchanged (posts/comments are still created as before)."
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "text": "Ensure the frontend prevents posting/commenting when the current user has not created a profile, aligning the UI behavior with the backend enforcement.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Who has not prepared profile should not be allowed to post without creating profile"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When the authenticated user has no profile, the app flow continues to block interaction via the existing profile setup modal (no route/page renders behind it).",
+        "If any posting/commenting UI can still render (edge cases), the post composer submit and comment submit actions are disabled and show an English message instructing the user to create a profile first.",
+        "If the backend returns the new \"profile required\" error, the frontend displays a readable English toast/error message (not raw traps)."
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/components/ui (shadcn components must be composed, not edited).",
-    "Do not change backend code; this change is Home page UI only.",
-    "Use English for all user-facing text."
+    "Backend must remain a single Motoko actor; implement changes in `backend/main.mo` only (no additional backend services).",
+    "Do not edit files under `frontend/src/components/ui` or the immutable hook files listed in SYSTEM_CONTEXT.",
+    "Use English for all user-facing strings added or modified."
   ],
   "nonGoals": [
-    "Do not add or change authentication behavior.",
-    "Do not add a new backend endpoint or persistence for contact/inquiry messages."
+    "Implementing a full friends list or contacts endpoint for chat.",
+    "Changing authentication providers or adding third-party auth.",
+    "Redesigning the entire feed UI beyond replacing author identifiers with usernames and enforcing profile gating for post/comment creation."
   ],
   "imageRequirements": {
     "required": [],

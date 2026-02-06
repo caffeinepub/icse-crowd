@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { UserProfile, Post, Report, UserRole, Variant_resolved_pending_reviewed } from '../backend';
+import type { UserProfile, Post, Report, UserRole, Variant_resolved_pending_reviewed, Comment } from '../backend';
 import { Principal } from '@dfinity/principal';
 import { ExternalBlob } from '../backend';
 
@@ -22,6 +22,21 @@ export function useGetCallerUserProfile() {
     isLoading: actorFetching || query.isLoading,
     isFetched: !!actor && query.isFetched,
   };
+}
+
+export function useGetUserProfile(principal: Principal | null) {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<UserProfile | null>({
+    queryKey: ['userProfile', principal?.toString() ?? 'null'],
+    queryFn: async () => {
+      if (!actor || !principal) return null;
+      return actor.getUserProfile(principal);
+    },
+    enabled: !!actor && !actorFetching && !!principal,
+    retry: false,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
 }
 
 export function useSaveCallerUserProfile() {
@@ -102,6 +117,19 @@ export function useLikePost() {
   });
 }
 
+export function useGetPostComments(postId: bigint, options?: { enabled?: boolean }) {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<Comment[]>({
+    queryKey: ['postComments', postId.toString()],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getPostComments(postId);
+    },
+    enabled: !!actor && !actorFetching && (options?.enabled ?? true),
+  });
+}
+
 export function useAddComment() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -111,8 +139,9 @@ export function useAddComment() {
       if (!actor) throw new Error('Actor not available');
       return actor.addComment(data.postId, data.content);
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['feed'] });
+      queryClient.invalidateQueries({ queryKey: ['postComments', variables.postId.toString()] });
     },
   });
 }
@@ -151,12 +180,15 @@ export function useSendMessage() {
 }
 
 export function useCreateStudyGroup() {
-  const { actor } = useActor();
+  const { actor, isFetching } = useActor();
 
   return useMutation({
     mutationFn: async (data: { name: string; description: string }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.createStudyGroup(data.name, data.description);
+    },
+    meta: {
+      actorReady: !!actor && !isFetching,
     },
   });
 }
