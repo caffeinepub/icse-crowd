@@ -39,6 +39,19 @@ export interface Report {
   'reporter' : Principal,
   'reason' : string,
 }
+export interface StudyGroup {
+  'id' : bigint,
+  'creator' : Principal,
+  'members' : Array<Principal>,
+  'name' : string,
+  'description' : string,
+}
+export interface StudyGroupMessage {
+  'id' : bigint,
+  'content' : string,
+  'sender' : Principal,
+  'timestamp' : Time,
+}
 export type Time = bigint;
 export interface UserProfile {
   'blockedUsers' : Array<Principal>,
@@ -95,16 +108,20 @@ export interface _SERVICE {
   'deleteForumPost' : ActorMethod<[bigint], undefined>,
   'deletePost' : ActorMethod<[bigint], undefined>,
   'deletePostByAuthor' : ActorMethod<[bigint], undefined>,
+  'getAllStudyGroups' : ActorMethod<[], Array<StudyGroup>>,
   'getAllUsers' : ActorMethod<[], Array<UserProfile>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getFeed' : ActorMethod<[], Array<Post>>,
   'getPostComments' : ActorMethod<[bigint], Array<Comment>>,
   'getReports' : ActorMethod<[], Array<Report>>,
+  'getStudyGroup' : ActorMethod<[bigint], [] | [StudyGroup]>,
+  'getStudyGroupMessages' : ActorMethod<[bigint], Array<StudyGroupMessage>>,
   'getUserComments' : ActorMethod<[Principal], Array<Comment>>,
   'getUserPosts' : ActorMethod<[Principal], Array<Post>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'joinStudyGroup' : ActorMethod<[bigint], undefined>,
   'likePost' : ActorMethod<[bigint], undefined>,
   'reportContent' : ActorMethod<
     [[] | [Principal], [] | [string], string],
@@ -122,6 +139,7 @@ export interface _SERVICE {
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'sendFriendRequest' : ActorMethod<[Principal], undefined>,
   'sendMessage' : ActorMethod<[Principal, string], undefined>,
+  'sendStudyGroupMessage' : ActorMethod<[bigint, string], undefined>,
   'updatePost' : ActorMethod<
     [
       bigint,

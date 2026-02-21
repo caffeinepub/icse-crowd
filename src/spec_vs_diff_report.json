@@ -1,106 +1,15 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-06T10:04:21.632Z",
-  "summary": "Frontend changes add a consistent \"Guest\" fallback label and update feed/card rendering to use per-author profile lookups with safe principal parsing; diff summaries also claim post/comment UI no longer requires a profile. Backend changes are truncated in the provided diff, so removal of profile-enforcement traps for createPost/addComment/getFeed cannot be verified from the available evidence. Several unrelated frontend/UI/theme/auth improvements appear in the diff summary but were not requested.",
-  "missing_requirements": [
-    {
-      "id": "REQ-19",
-      "requirement": "Remove the backend profile-existence enforcement for creating posts and adding comments so an authenticated caller can create posts and comments even when they have not created a UserProfile.",
-      "reason": "backend/main.mo is truncated and the diff excerpt does not show any changes to createPost(...) or addComment(...) (e.g., removal of the trap \"User must have a profile to create posts and comments!\"). لذلك cannot confirm the enforcement was removed while keeping other auth checks intact.",
-      "evidence": [
-        "backend/main.mo (truncated)"
-      ]
-    },
-    {
-      "id": "REQ-20",
-      "requirement": "Update backend feed access so users without a profile can still retrieve and view the feed (getFeed should not trap solely due to missing profile).",
-      "reason": "backend/main.mo is truncated and the diff excerpt does not show getFeed() logic or any removal of profile checks/traps for feed access.",
-      "evidence": [
-        "backend/main.mo (truncated)"
-      ]
-    }
-  ],
-  "hallucinated_features": [
-    {
-      "description": "Global theme/color system change to OKLCH red/white for light and dark modes.",
-      "reason": "Not requested by any requirement (REQ-19..REQ-23 focus on removing profile gating and displaying \"Guest\").",
-      "evidence": [
-        "frontend/src/index.css (mentioned in frontend-file-summaries.txt)"
-      ]
-    },
-    {
-      "description": "Footer content changes including new attribution and developer credit \"Developed by Aryan Shinde\".",
-      "reason": "Not requested; unrelated to guest posting/commenting or author display changes.",
-      "evidence": [
-        "frontend/src/components/Footer.tsx (mentioned in frontend-file-summaries.txt)"
-      ]
-    },
-    {
-      "description": "Header authentication UX enhancements (toasts, improved button states, visual feedback).",
-      "reason": "Not requested; requirements do not mention auth UX changes.",
-      "evidence": [
-        "frontend/src/components/Header.tsx (mentioned in frontend-file-summaries.txt)"
-      ]
-    },
-    {
-      "description": "Profile setup modal API changed to controlled modal with open/onOpenChange/onSuccess props.",
-      "reason": "Not requested; requirements explicitly say not to change profile creation UX beyond removing the posting/commenting gate.",
-      "evidence": [
-        "frontend/src/components/ProfileSetupModal.tsx (mentioned in frontend-file-summaries.txt)"
-      ]
-    },
-    {
-      "description": "Home page layout/UX changes adding multiple conditional \"Create Profile\" buttons/sections and conditional PostComposer display.",
-      "reason": "Not requested; requirements only ask to remove gating on post/comment creation and display \"Guest\" when profile missing.",
-      "evidence": [
-        "frontend/src/pages/HomePage.tsx (mentioned in frontend-file-summaries.txt)"
-      ]
-    },
-    {
-      "description": "Study groups page create flow hardened with extra checks and detailed error handling.",
-      "reason": "Not requested; unrelated feature area.",
-      "evidence": [
-        "frontend/src/pages/StudyGroupsPage.tsx (mentioned in frontend-file-summaries.txt)"
-      ]
-    },
-    {
-      "description": "Forum page changes adding question posting dialog and placeholder for future forum posts.",
-      "reason": "Not requested; unrelated feature area.",
-      "evidence": [
-        "frontend/src/pages/ForumPage.tsx (mentioned in frontend-file-summaries.txt)"
-      ]
-    },
-    {
-      "description": "Chat page implementation/changes (contact list, message composition, conversation view).",
-      "reason": "Not requested; unrelated feature area.",
-      "evidence": [
-        "frontend/src/pages/ChatPage.tsx (mentioned in frontend-file-summaries.txt)"
-      ]
-    },
-    {
-      "description": "Moderation dashboard adjustments (enum comparison for filtering, report updates).",
-      "reason": "Not requested; unrelated feature area.",
-      "evidence": [
-        "frontend/src/pages/ModerationPage.tsx (mentioned in frontend-file-summaries.txt)"
-      ]
-    },
-    {
-      "description": "Media validation enhancements including shared 600MB video size constant/label and related UI validation.",
-      "reason": "Not requested; requirements do not mention changing media upload limits/validation.",
-      "evidence": [
-        "frontend/src/utils/mediaGuards.ts (mentioned in frontend-file-summaries.txt)",
-        "backend/main.mo (shows MAX_VIDEO_SIZE_BYTES constant in truncated excerpt)"
-      ]
-    }
-  ],
-  "confidence": 0.6,
+  "generatedAt": "2026-02-21T13:27:12.713Z",
+  "summary": "The diff implements all three requirements for automatic content moderation. REQ-33 is satisfied by a banned keyword list in the backend. REQ-34 is satisfied by validation logic in createStudyGroup that scans descriptions and rejects groups containing banned words. REQ-35 is satisfied by frontend error handling that displays user-friendly messages and keeps the dialog open for retry.",
+  "missing_requirements": [],
+  "hallucinated_features": [],
+  "confidence": 0.92,
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/FeedPostCard.tsx",
-    "frontend/src/components/PostComposer.tsx",
-    "frontend/src/utils/userDisplay.ts",
+    "frontend/src/pages/StudyGroupsPage.tsx",
     "project_state.json"
   ]
 }

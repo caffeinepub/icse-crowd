@@ -1,62 +1,38 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-06T10:04:21.635Z",
+  "generatedAt": "2026-02-21T13:27:12.716Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 5,
-    "implemented": 3,
+    "total": 3,
+    "implemented": 1,
     "items": [
       {
-        "id": "REQ-19",
-        "summary": "Remove the backend profile-existence enforcement for creating posts and adding comments so an authenticated caller can create posts and comments even when they have not created a UserProfile.",
+        "id": "REQ-33",
+        "summary": "Define a predefined list of banned/sensitive keywords in the backend that includes profanity, hate speech, spam terms, and non-academic content indicators",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-20",
-        "summary": "Update backend feed access so users without a profile can still retrieve and view the feed (required to support posting/commenting workflows for users without profiles).",
+        "id": "REQ-34",
+        "summary": "Implement automatic validation in the createStudyGroup backend method that scans the group description for any banned keywords and completely rejects the creation if sensitive words are detected",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-21",
-        "summary": "Update the Post creation UI to allow posting without a profile: remove the UI block/disable logic that prevents composing and submitting posts when `useGetCallerUserProfile()` returns null.",
+        "id": "REQ-35",
+        "summary": "Update the frontend Study Groups page to display a clear, readable error message when study group creation fails due to content moderation",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/PostComposer.tsx"
+          "frontend/src/pages/StudyGroupsPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/PostComposer.tsx"
-        ]
-      },
-      {
-        "id": "REQ-22",
-        "summary": "Update the Comment creation UI to allow commenting without a profile: remove the UI gating that hides/disables the comment input and submission when the current user has no profile.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/FeedPostCard.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/FeedPostCard.tsx"
-        ]
-      },
-      {
-        "id": "REQ-23",
-        "summary": "Display a placeholder author name of \"Guest\" for any post or comment whose author does not have a user profile available to the frontend (profile lookup returns null).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/utils/userDisplay.ts",
-          "frontend/src/components/FeedPostCard.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/utils/userDisplay.ts",
-          "frontend/src/components/FeedPostCard.tsx"
+          "frontend/src/pages/StudyGroupsPage.tsx"
         ]
       }
     ]
@@ -64,12 +40,12 @@
   "changedFiles": [
     "backend/main.mo",
     "build-request.json",
+    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/FeedPostCard.tsx",
-    "frontend/src/components/PostComposer.tsx",
-    "frontend/src/utils/userDisplay.ts",
+    "frontend/src/config.ts",
+    "frontend/src/pages/StudyGroupsPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

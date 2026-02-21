@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { UserProfile, Post, Report, UserRole, Variant_resolved_pending_reviewed, Comment } from '../backend';
+import type { UserProfile, Post, Report, UserRole, Variant_resolved_pending_reviewed, Comment, StudyGroup, StudyGroupMessage } from '../backend';
 import { Principal } from '@dfinity/principal';
 import { ExternalBlob } from '../backend';
 
@@ -179,16 +179,74 @@ export function useSendMessage() {
   });
 }
 
-export function useCreateStudyGroup() {
+export function useGetAllStudyGroups() {
   const { actor, isFetching } = useActor();
+
+  return useQuery<StudyGroup[]>({
+    queryKey: ['studyGroups'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllStudyGroups();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateStudyGroup() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: { name: string; description: string }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.createStudyGroup(data.name, data.description);
     },
-    meta: {
-      actorReady: !!actor && !isFetching,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['studyGroups'] });
+    },
+  });
+}
+
+export function useJoinStudyGroup() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (groupId: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.joinStudyGroup(groupId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['studyGroups'] });
+    },
+  });
+}
+
+export function useGetStudyGroupMessages(groupId: bigint | null, options?: { enabled?: boolean; refetchInterval?: number }) {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<StudyGroupMessage[]>({
+    queryKey: ['studyGroupMessages', groupId?.toString() ?? 'null'],
+    queryFn: async () => {
+      if (!actor || !groupId) return [];
+      return actor.getStudyGroupMessages(groupId);
+    },
+    enabled: !!actor && !actorFetching && !!groupId && (options?.enabled ?? true),
+    refetchInterval: options?.refetchInterval,
+  });
+}
+
+export function useSendStudyGroupMessage() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { groupId: bigint; content: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.sendStudyGroupMessage(data.groupId, data.content);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['studyGroupMessages', variables.groupId.toString()] });
     },
   });
 }

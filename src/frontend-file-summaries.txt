@@ -1,12 +1,12 @@
 {
   "frontend/src/App.tsx": "Main application component with lazy-loaded page components wrapped in Suspense boundaries for code splitting, authentication state management, and theme provider integration without auto-gating profile setup.",
-  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including a new useGetUserProfile hook that fetches and caches any user's profile by principal with a stable queryKey.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including study group management (create, join, get all), study group chat (fetch messages with polling, send messages), and all other app features with proper invalidation.",
   "frontend/src/components/Header.tsx": "Navigation header with enhanced authentication UX including toast notifications for login errors, improved button states during initialization and login, and better visual feedback for authentication status.",
   "frontend/src/components/Footer.tsx": "Footer component with copyright notice, caffeine.ai attribution, and developer credit \"Developed by Aryan Shinde\".",
   "frontend/src/components/ProfileSetupModal.tsx": "Controlled modal dialog for user profile creation with name, email, and academic details fields, accepting open/onOpenChange/onSuccess props for flexible usage.",
   "frontend/src/pages/HomePage.tsx": "Landing page with hero section, feature cards, collaboration showcase, inquiries section, and conditional \"Create Profile\" buttons appearing in three centered locations (top of page, hero section, and \"Complete Your Profile\" section) for authenticated users without profiles, plus PostComposer for users with profiles.",
   "frontend/src/pages/FeedPage.tsx": "Social feed page with PostComposer integration, memoized post sorting, stable callbacks for likes and comments, and normalized IC error handling for all mutations.",
-  "frontend/src/pages/StudyGroupsPage.tsx": "Study groups page with hardened create flow that prevents submission while actor initializes, checks authentication state, and displays detailed error messages including underlying canister reject/trap reasons.",
+  "frontend/src/pages/StudyGroupsPage.tsx": "Study groups page with create group dialog, join/joined button states per group based on membership, member-only chat access via MessageCircle button, and enhanced error handling that keeps the dialog open when content moderation errors occur so users can revise their description and retry.",
   "frontend/src/pages/ForumPage.tsx": "Q&A forum page with question posting dialog and placeholder for future forum posts.",
   "frontend/src/pages/ChatPage.tsx": "Chat interface with contact list, message composition, and conversation view.",
   "frontend/src/pages/ModerationPage.tsx": "Admin moderation dashboard with report management using proper enum comparison for report status filtering and updates.",
@@ -19,5 +19,6 @@
   "frontend/src/hooks/useActor.ts": "Actor initialization hook that creates authenticated or anonymous backend actors and invalidates dependent queries on actor changes without forcing immediate double-refetch, preserving admin token initialization.",
   "frontend/src/hooks/useInternetIdentity.ts": "Internet Identity authentication hook with improved error handling, fallback to default production II URL (https://identity.ic0.app), better state management for login/logout flows, and proper auth client recreation after logout.",
   "frontend/src/utils/userDisplay.ts": "Utility functions for deriving display initials from usernames and providing consistent \"Guest\" fallback labels for unknown or missing users.",
-  "frontend/src/utils/principal.ts": "Utility function to safely convert principal text strings into Principal instances with error handling, returning null on invalid input."
+  "frontend/src/utils/principal.ts": "Utility function to safely convert principal text strings into Principal instances with error handling, returning null on invalid input.",
+  "frontend/src/components/StudyGroupChatDialog.tsx": "Member-only study group chat dialog with message history, 3-second polling for updates, scrollable message list with sender avatars and timestamps, message composer with send button, and loading/empty/error states."
 }

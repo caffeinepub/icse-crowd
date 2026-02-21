@@ -3,9 +3,9 @@ import Iter "mo:core/Iter";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Nat "mo:core/Nat";
-import Map "mo:core/Map";
 import List "mo:core/List";
 import Order "mo:core/Order";
+import Map "mo:core/Map";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Storage "blob-storage/Storage";
@@ -88,12 +88,19 @@ actor {
     timestamp : Time.Time;
   };
 
-  type StudyGroup = {
+  public type StudyGroup = {
     id : Nat;
     name : Text;
     description : Text;
     members : [Principal];
     creator : Principal;
+  };
+
+  public type StudyGroupMessage = {
+    id : Nat;
+    sender : Principal;
+    content : Text;
+    timestamp : Time.Time;
   };
 
   type SharedNote = {
@@ -131,6 +138,7 @@ actor {
   let sharedNotes = Map.empty<Nat, SharedNote>();
   let forumPosts = Map.empty<Nat, ForumPost>();
   let reports = Map.empty<Nat, Report>();
+  let studyGroupMessages = Map.empty<Nat, List.List<StudyGroupMessage>>();
 
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -148,7 +156,7 @@ actor {
 
   func validateVideoSize(video : ?Storage.ExternalBlob) : () {
     switch (video) {
-      case (null) { /* No video, validation passes */ };
+      case (null) {};
       case (?blob) {
         if (blob.size() > MAX_VIDEO_SIZE_BYTES) {
           Runtime.trap("Video upload rejected: File size exceeds the maximum allowed limit of 600MB. Please upload a smaller video file.");
@@ -227,7 +235,7 @@ actor {
 
   func checkUserProfileExists(caller : Principal) : () {
     if (userProfiles.get(caller) == null) {
-      Runtime.trap("User must have a profile to create posts and comments!");
+      Runtime.trap("User must have a profile to continue!");
     };
   };
 
@@ -371,15 +379,417 @@ actor {
     chatMessages.add(id, message);
   };
 
+  func containsBannedWord(text : Text) : Bool {
+    let bannedWords = [
+      "fuck",
+      "shit",
+      "bitch",
+      "nigger",
+      "cunt",
+      "pussy",
+      "motherfucker",
+      "goddamn",
+      "rape",
+      "slut",
+      "cock",
+      "cock-sucker",
+      "fucker",
+      "gaylord",
+      "fart",
+      "shart",
+      "assassinate",
+      "piss",
+      "suck",
+      "hit-man",
+      "nazi",
+      "420",
+      "aids",
+      "anorexic",
+      "ass",
+      "cum",
+      "beaner",
+      "beer",
+      "motherfucking",
+      "bitching",
+      "blowjob",
+      "boobs",
+      "butt",
+      "chink",
+      "chloroform",
+      "vagina",
+      "circumcised",
+      "clit",
+      "clitoris",
+      "cock",
+      "cock-sucking",
+      "cock-sucker",
+      "cock-suckers",
+      "cock-fight",
+      "cocks",
+      "condom",
+      "condoms",
+      "cum",
+      "cum-bucket",
+      "cum-splash",
+      "cum-suck",
+      "cum-sucker",
+      "cunt",
+      "drunk",
+      "drunken",
+      "ejaculate",
+      "erection",
+      "faggot",
+      "fag",
+      "fatso",
+      "fck",
+      "feck",
+      "felch",
+      "felching",
+      "fellate",
+      "fellating",
+      "fellatio",
+      "finger-fuck",
+      "frenulum",
+      "frenulum-brevis",
+      "fuck",
+      "fucken",
+      "fecal",
+      "faggotizing",
+      "gang-bang",
+      "gangbang",
+      "gay",
+      "gays",
+      "God-damn",
+      "homo",
+      "homosexual",
+      "hueso",
+      "jackass",
+      "jack-off",
+      "jizz",
+      "licker",
+      "lust",
+      "manwhore",
+      "pervert",
+      "penetrate",
+      "pedo",
+      "prostitute",
+      "prostitutes",
+      "queer",
+      "rape",
+      "rapist",
+      "raping",
+      "rosy",
+      "scrotum",
+      "sodomize",
+      "sodomizer",
+      "sodomizing",
+      "spic",
+      "testicles",
+      "threesome",
+      "twat",
+      "vajayjay",
+      "wanker",
+      "whore",
+      "masturbate",
+      "masturbation",
+      "porn",
+      "pornography",
+      "sensual",
+      "stripper",
+      "striptease",
+      "submissive",
+      "titties",
+      "double-penetration",
+      "dp",
+      "kinky",
+      "pornstar",
+      "sex",
+      "swinger",
+      "swingers",
+      "lusty",
+      "orgy",
+      "balls",
+      "blow-job",
+      "blow-jobs",
+      "blowbang",
+      "bukkake",
+      "cum-load",
+      "cum-shots",
+      "cum-margins",
+      "cumpilation",
+      "fisting",
+      "foot-fetish",
+      "gang-bang",
+      "anal",
+      "anal-sex",
+      "butt-fuck",
+      "butt-plug",
+      "buttplugs",
+      "cunnilingus",
+      "fleshlight",
+      "threesome",
+      "threesomes",
+      "gagging",
+      "glory-hole",
+      "mature",
+      "matures",
+      "manhole",
+      "manscaping",
+      "nymphomaniac",
+      "objectum",
+      "objectum-sex",
+      "objectophilia",
+      "panty",
+      "pantyhose",
+      "panties",
+      "pegging",
+      "queef",
+      "rimming",
+      "rodding",
+      "rimming",
+      "sexual",
+      "sexually",
+      "sexual-health",
+      "sexual-intercourse",
+      "sexual-orientation",
+      "shagging",
+      "shocker",
+      "shocking",
+      "shotgun",
+      "sissy-ass",
+      "slave-training",
+      "sloppy-seconds",
+      "spanking",
+      "spooning",
+      "strap-on",
+      "strap-es",
+      "strap-on-dildo",
+      "strap-on-anal",
+      "strap-on-porn",
+      "strap-ons",
+      "stripping",
+      "stripper",
+      "strapon",
+      "strapon-anal",
+      "strapon-dildo",
+      "strapon-porn",
+      "strapons",
+      "studfuck",
+      "threesome",
+      "threesomes",
+      "titfuck",
+      "titfucks",
+      "titty-fuck",
+      "toys",
+      "twat",
+      "two-in-the-pink",
+      "two-in-the-pink-one-in-the-stink",
+      "two-in-the-pink-one-in-the-pink",
+      "two-in-the-stink",
+      "two-in-the-stink-one-in-the-pink",
+      "video-orientation",
+      "voyeur",
+      "voyuerism",
+      "watchmen-shocker",
+      "webcam-show",
+      "webcamgirl",
+      "webcamslave",
+      "whore",
+      "x-rated",
+      "yaoi",
+      "yiffing",
+      "adult",
+      "adults-only",
+      "bareback",
+      "bondage",
+      "bosporus",
+      "cocktail",
+      "animated",
+      "milf",
+      "movies",
+      "mpegs",
+      "oral",
+      "oral-sex",
+      "stripped",
+      "pictures",
+      "sex",
+      "sleazy",
+      "gallery",
+      "adult-galleries",
+      "adult-pictures",
+      "aof-gallery",
+      "fetish",
+      "downblouse",
+      "galleries",
+      "model-sets",
+      "centerfold",
+      "enlargement",
+      "erotic",
+      "amateur",
+      "fetish",
+      "fetishes",
+      "fantasy",
+      "enlargement",
+      "hardcore",
+      "incest",
+      "pictures",
+      "i-candy",
+      "masturbation",
+      "masturbating",
+      "hardware",
+      "sex-toy",
+      "masturbator",
+      "tit-fuck",
+      "penetrations",
+      "anal-sex",
+      "prostate",
+      "sex-camera",
+      "sex-photos",
+      "creampie",
+      "erotic",
+      "movie",
+      "sex-videos",
+      "escort",
+      "escorts",
+      "massage",
+      "massage-parlors",
+      "teasing",
+      "shaved-male",
+      "teasing",
+      "video",
+      "shocker",
+      "stripper",
+      "strippers",
+      "hot-rod",
+      "vibrator",
+      "vibrators",
+      "milky-way",
+      "nipple",
+      "hard",
+      "dildo",
+      "dildos",
+      "oil",
+      "hardcore",
+      "sloppy-seconds",
+      "toy",
+      "vibrator",
+      "masturbation",
+      "masturbating",
+      "fuck-me",
+      "testicle",
+      "testicles",
+      "testicular",
+      "teat",
+      "mosque",
+      "sunni",
+      "Muslim",
+      "psychology",
+      "anal-aggression",
+      "aesthetic",
+      "agoraphobia",
+      "asthma",
+      "autism",
+      "autistic-behavior",
+      "echolalia",
+      "tard",
+      "cure",
+      "fixers",
+      "ange",
+      "bereavement",
+      "bipolar",
+      "body-dismorphia",
+      "body-image",
+      "body-mutilation",
+      "catatonia",
+      "catt",
+      "chemotherapy",
+      "chiropody",
+      "chubby",
+      "cleft-palate",
+      "cold",
+      "counseling",
+      "cpap",
+      "creative-therapy",
+      "cyclothymia",
+      "depression",
+      "dsmt",
+      "dsm-v4",
+      "down-syndrome",
+      "dyslexia",
+      "eating-disorder",
+      "eating-disorders",
+      "electro-shock",
+      "electroconvulsive",
+      "ect",
+      "electro-shock-therapy",
+      "emdr",
+      "emotional-imbalance",
+      "epilepsy",
+      "exorcism",
+      "fat",
+      "gender-bias",
+      "gender-different",
+      "gender-dysfunction",
+      "gender-preference",
+      "genetic-deficiency",
+      "gp",
+      "growing-pains",
+      "handicap",
+      "heatreport",
+      "hermaphrodite",
+      "hermy",
+      "homeopathy",
+      "housebound",
+      "hypothyroidism",
+      "incest",
+      "incontinence",
+      "mental-disability",
+      "obesity",
+      "odd",
+      "organ-donor",
+      "pad",
+      "paranoia",
+      "neuroses",
+      "neurosis",
+      "psychosis",
+      "psychotherapy",
+      "reincarnation",
+      "rheumatoid",
+      "scoliosis",
+      "screening",
+      "specialist",
+      "therapy",
+      "therapist",
+      "thick",
+      "transgender",
+      "transgendered",
+      "transsexual",
+      "transvestite",
+      "wrist-bands"
+    ];
+
+    let lowerText = text.toLower();
+    for (word in bannedWords.values()) {
+      if (lowerText.contains(#text(word))) { return true };
+    };
+    false;
+  };
+
   public shared ({ caller }) func createStudyGroup(name : Text, description : Text) : async () {
-    checkUserProfileExists(caller);
+    if (userProfiles.get(caller) == null) {
+      Runtime.trap("Study group creation failed! You must have a profile to create a study group!");
+    };
+
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create study groups");
     };
 
-    // Ensure the group name is not empty
     if (name.size() == 0) {
       Runtime.trap("Group name cannot be empty");
+    };
+
+    if (containsBannedWord(description)) {
+      Runtime.trap("Description contains illegal words, terms or information");
     };
 
     let id = generateUniqueId();
@@ -391,6 +801,97 @@ actor {
       creator = caller;
     };
     studyGroups.add(id, group);
+  };
+
+  public shared ({ caller }) func joinStudyGroup(groupId : Nat) : async () {
+    if (userProfiles.get(caller) == null) {
+      Runtime.trap("Must have a profile to join a study group!");
+    };
+
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can join study groups");
+    };
+
+    switch (studyGroups.get(groupId)) {
+      case (null) { Runtime.trap("Study group not found") };
+      case (?group) {
+        if (group.members.values().any(func(m) { m == caller })) {
+          Runtime.trap("You are already a member of this study group");
+        };
+
+        let updatedMembers = group.members.concat([caller]);
+        let updatedGroup : StudyGroup = { group with members = updatedMembers };
+        studyGroups.add(groupId, updatedGroup);
+      };
+    };
+  };
+
+  public query ({ caller }) func getStudyGroup(groupId : Nat) : async ?StudyGroup {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view study groups");
+    };
+    studyGroups.get(groupId);
+  };
+
+  public query ({ caller }) func getAllStudyGroups() : async [StudyGroup] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view study groups");
+    };
+    studyGroups.values().toArray();
+  };
+
+  public shared ({ caller }) func sendStudyGroupMessage(groupId : Nat, content : Text) : async () {
+    if (userProfiles.get(caller) == null) {
+      Runtime.trap("Must have a profile to send messages!");
+    };
+
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can send study group messages");
+    };
+
+    switch (studyGroups.get(groupId)) {
+      case (null) { Runtime.trap("Study group not found") };
+      case (?group) {
+        if (not group.members.values().any(func(m) { m == caller })) {
+          Runtime.trap("You are not a member of this study group");
+        };
+
+        let messageId = generateUniqueId();
+        let message : StudyGroupMessage = {
+          id = messageId;
+          sender = caller;
+          content;
+          timestamp = Time.now();
+        };
+
+        let existingMessages = switch (studyGroupMessages.get(groupId)) {
+          case (null) { List.empty<StudyGroupMessage>() };
+          case (?messages) { messages };
+        };
+        existingMessages.add(message);
+        studyGroupMessages.add(groupId, existingMessages);
+      };
+    };
+  };
+
+  public query ({ caller }) func getStudyGroupMessages(groupId : Nat) : async [StudyGroupMessage] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view study group messages");
+    };
+
+    switch (studyGroups.get(groupId)) {
+      case (null) { Runtime.trap("Study group not found") };
+      case (?group) {
+        if (not group.members.values().any(func(m) { m == caller })) {
+          Runtime.trap("Unauthorized: Only members can view study group messages");
+        };
+
+        switch (studyGroupMessages.get(groupId)) {
+          case (null) { [] };
+          case (?messages) { messages.toArray() };
+        };
+      };
+    };
   };
 
   public shared ({ caller }) func addSharedNote(groupId : Nat, content : Text) : async () {
@@ -538,7 +1039,6 @@ actor {
       Runtime.trap("Unauthorized: Only users can update posts");
     };
 
-    // Validate video size before accepting the upload
     validateVideoSize(video);
 
     switch (posts.get(postId)) {

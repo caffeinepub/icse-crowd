@@ -25,6 +25,13 @@ export const UserRole = IDL.Variant({
   'guest' : IDL.Null,
 });
 export const ExternalBlob = IDL.Vec(IDL.Nat8);
+export const StudyGroup = IDL.Record({
+  'id' : IDL.Nat,
+  'creator' : IDL.Principal,
+  'members' : IDL.Vec(IDL.Principal),
+  'name' : IDL.Text,
+  'description' : IDL.Text,
+});
 export const UserProfile = IDL.Record({
   'blockedUsers' : IDL.Vec(IDL.Principal),
   'principal' : IDL.Principal,
@@ -63,6 +70,12 @@ export const Report = IDL.Record({
   'timestamp' : Time,
   'reporter' : IDL.Principal,
   'reason' : IDL.Text,
+});
+export const StudyGroupMessage = IDL.Record({
+  'id' : IDL.Nat,
+  'content' : IDL.Text,
+  'sender' : IDL.Principal,
+  'timestamp' : Time,
 });
 
 export const idlService = IDL.Service({
@@ -115,16 +128,24 @@ export const idlService = IDL.Service({
   'deleteForumPost' : IDL.Func([IDL.Nat], [], []),
   'deletePost' : IDL.Func([IDL.Nat], [], []),
   'deletePostByAuthor' : IDL.Func([IDL.Nat], [], []),
+  'getAllStudyGroups' : IDL.Func([], [IDL.Vec(StudyGroup)], ['query']),
   'getAllUsers' : IDL.Func([], [IDL.Vec(UserProfile)], []),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], []),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getFeed' : IDL.Func([], [IDL.Vec(Post)], []),
   'getPostComments' : IDL.Func([IDL.Nat], [IDL.Vec(Comment)], []),
   'getReports' : IDL.Func([], [IDL.Vec(Report)], []),
+  'getStudyGroup' : IDL.Func([IDL.Nat], [IDL.Opt(StudyGroup)], ['query']),
+  'getStudyGroupMessages' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Vec(StudyGroupMessage)],
+      ['query'],
+    ),
   'getUserComments' : IDL.Func([IDL.Principal], [IDL.Vec(Comment)], []),
   'getUserPosts' : IDL.Func([IDL.Principal], [IDL.Vec(Post)], []),
   'getUserProfile' : IDL.Func([IDL.Principal], [IDL.Opt(UserProfile)], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'joinStudyGroup' : IDL.Func([IDL.Nat], [], []),
   'likePost' : IDL.Func([IDL.Nat], [], []),
   'reportContent' : IDL.Func(
       [IDL.Opt(IDL.Principal), IDL.Opt(IDL.Text), IDL.Text],
@@ -146,6 +167,7 @@ export const idlService = IDL.Service({
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'sendFriendRequest' : IDL.Func([IDL.Principal], [], []),
   'sendMessage' : IDL.Func([IDL.Principal, IDL.Text], [], []),
+  'sendStudyGroupMessage' : IDL.Func([IDL.Nat, IDL.Text], [], []),
   'updatePost' : IDL.Func(
       [
         IDL.Nat,
@@ -179,6 +201,13 @@ export const idlFactory = ({ IDL }) => {
     'guest' : IDL.Null,
   });
   const ExternalBlob = IDL.Vec(IDL.Nat8);
+  const StudyGroup = IDL.Record({
+    'id' : IDL.Nat,
+    'creator' : IDL.Principal,
+    'members' : IDL.Vec(IDL.Principal),
+    'name' : IDL.Text,
+    'description' : IDL.Text,
+  });
   const UserProfile = IDL.Record({
     'blockedUsers' : IDL.Vec(IDL.Principal),
     'principal' : IDL.Principal,
@@ -217,6 +246,12 @@ export const idlFactory = ({ IDL }) => {
     'timestamp' : Time,
     'reporter' : IDL.Principal,
     'reason' : IDL.Text,
+  });
+  const StudyGroupMessage = IDL.Record({
+    'id' : IDL.Nat,
+    'content' : IDL.Text,
+    'sender' : IDL.Principal,
+    'timestamp' : Time,
   });
   
   return IDL.Service({
@@ -269,16 +304,24 @@ export const idlFactory = ({ IDL }) => {
     'deleteForumPost' : IDL.Func([IDL.Nat], [], []),
     'deletePost' : IDL.Func([IDL.Nat], [], []),
     'deletePostByAuthor' : IDL.Func([IDL.Nat], [], []),
+    'getAllStudyGroups' : IDL.Func([], [IDL.Vec(StudyGroup)], ['query']),
     'getAllUsers' : IDL.Func([], [IDL.Vec(UserProfile)], []),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], []),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getFeed' : IDL.Func([], [IDL.Vec(Post)], []),
     'getPostComments' : IDL.Func([IDL.Nat], [IDL.Vec(Comment)], []),
     'getReports' : IDL.Func([], [IDL.Vec(Report)], []),
+    'getStudyGroup' : IDL.Func([IDL.Nat], [IDL.Opt(StudyGroup)], ['query']),
+    'getStudyGroupMessages' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(StudyGroupMessage)],
+        ['query'],
+      ),
     'getUserComments' : IDL.Func([IDL.Principal], [IDL.Vec(Comment)], []),
     'getUserPosts' : IDL.Func([IDL.Principal], [IDL.Vec(Post)], []),
     'getUserProfile' : IDL.Func([IDL.Principal], [IDL.Opt(UserProfile)], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'joinStudyGroup' : IDL.Func([IDL.Nat], [], []),
     'likePost' : IDL.Func([IDL.Nat], [], []),
     'reportContent' : IDL.Func(
         [IDL.Opt(IDL.Principal), IDL.Opt(IDL.Text), IDL.Text],
@@ -300,6 +343,7 @@ export const idlFactory = ({ IDL }) => {
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'sendFriendRequest' : IDL.Func([IDL.Principal], [], []),
     'sendMessage' : IDL.Func([IDL.Principal, IDL.Text], [], []),
+    'sendStudyGroupMessage' : IDL.Func([IDL.Nat, IDL.Text], [], []),
     'updatePost' : IDL.Func(
         [
           IDL.Nat,

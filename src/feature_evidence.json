@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-post-creation-ui-to-allow-posting-without-a-profile-remove-the-ui-block-disable-logic-that-prevents-composing-and-submitting-posts-when-usegetcalleruserprofile-returns-null",
-      "featureTitle": "Update the Post creation UI to allow posting without a profile: remove the UI block/disable logic that prevents composing and submitting posts when `useGetCallerUserProfile()` returns null.",
+      "featureId": "feature-update-the-frontend-study-groups-page-to-display-a-clear-readable-error-message-when-study-group-creation-fails-due-to-content-moderation",
+      "featureTitle": "Update the frontend Study Groups page to display a clear, readable error message when study group creation fails due to content moderation",
       "files": [
-        "frontend/src/components/PostComposer.tsx"
+        "frontend/src/pages/StudyGroupsPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -17,48 +17,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-21"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-the-comment-creation-ui-to-allow-commenting-without-a-profile-remove-the-ui-gating-that-hides-disables-the-comment-input-and-submission-when-the-current-user-has-no-profile",
-      "featureTitle": "Update the Comment creation UI to allow commenting without a profile: remove the UI gating that hides/disables the comment input and submission when the current user has no profile.",
-      "files": [
-        "frontend/src/components/FeedPostCard.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-22"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-display-a-placeholder-author-name-of-guest-for-any-post-or-comment-whose-author-does-not-have-a-user-profile-available-to-the-frontend-profile-lookup-returns-null",
-      "featureTitle": "Display a placeholder author name of \"Guest\" for any post or comment whose author does not have a user profile available to the frontend (profile lookup returns null).",
-      "files": [
-        "frontend/src/components/FeedPostCard.tsx",
-        "frontend/src/utils/userDisplay.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-23"
+        "REQ-35"
       ],
       "confidence": "high"
     }

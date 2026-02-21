@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 51,
+  "projectStateVersion": 57,
   "summary": "ICSE Crowd is a full-stack Internet Computer (ICP) dapp: a social + academic collaboration platform for ICSE students. The frontend is a React/Tailwind app using Internet Identity for authentication and TanStack React Query for data fetching. The backend is a Motoko canister that provides role-based access control (admin/user/guest), user profiles, a social feed (posts with optional images, likes, comments), basic friend requests, direct messaging, study groups and shared notes, a simple forum posting feature, and a moderation/reporting system (reports, status workflow, admin deletions). The project also includes a Caffeine blob-storage mixin for handling externally stored blobs, gateway authorization, and storage maintenance endpoints.",
   "architectural_notes": [
     "Frontend uses React with a global InternetIdentityProvider (AuthClient) context to manage identity, login/logout, and persisted sessions.",
@@ -23,7 +23,8 @@
     "Backend maps are defined as non-stable in-memory structures; without stable variables/upgrade hooks, data likely will not persist across canister upgrades.",
     "Authentication/login issue: clicking Sign In has a long delay before failing with an authentication error (Internet Identity flow suspected/misconfigured).",
     "Authentication/login issue detail update: Sign In delay occurs every time; after the delay an authentication error message appears consistently.",
-    "Username display is still incorrect: posts/comments are not consistently showing the author’s profile display name (set during profile creation)."
+    "Username display is still incorrect: posts/comments are not consistently showing the author’s profile display name (set during profile creation).",
+    "Study group creation is failing for logged-in users: clicking \"Create Study Group\" on the Study Groups page produces no UI reaction and no group is created, while other Study Groups page functionality works."
   ],
   "isFixRequest": false,
   "existing_features": [
@@ -364,6 +365,62 @@
         "REQ-23"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-fix-the-study-groups-page-so-clicking-create-group-always-produces-a-visible-ui-response-for-logged-in-users-by-opening-the-create-study-group-dialog-reliably-do-not-depend-on-a-trigger-behavior-that-can-fail-when-the-dialog-is-controlled-via-open-state",
+      "title": "Fix the Study Groups page so clicking \"Create Group\" always produces a visible UI response for logged-in users by opening the \"Create Study Group\" dialog reliably (do not depend on a trigger behavior that can fail when the dialog is controlled via `open` state).",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-submitting-the-create-study-group-form-provides-clear-feedback-and-never-fails-silently-show-a-loading-state-while-the-create-request-is-in-flight-close-the-dialog-only-on-success-and-show-a-readable-error-toast-on-failure-using-normalizeicerror",
+      "title": "Ensure submitting the \"Create Study Group\" form provides clear feedback and never fails silently: show a loading state while the create request is in-flight, close the dialog only on success, and show a readable error toast on failure using `normalizeICError`.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-after-successfully-creating-a-study-group-refresh-the-study-groups-page-content-so-the-newly-created-group-is-visible-without-a-page-reload-invalidate-refetch-the-study-group-list-query-used-by-the-page",
+      "title": "After successfully creating a study group, refresh the Study Groups page content so the newly created group is visible without a page reload (invalidate/refetch the study-group list query used by the page).",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-if-study-group-listing-apis-are-missing-or-incomplete-in-the-backend-canister-add-repair-a-canister-query-method-that-returns-the-current-list-of-study-groups-needed-by-the-study-groups-page-and-ensure-generated-frontend-bindings-expose-the-necessary-studygroup-type-and-method",
+      "title": "If study-group listing APIs are missing or incomplete in the backend canister, add/repair a canister query method that returns the current list of study groups needed by the Study Groups page (and ensure generated frontend bindings expose the necessary StudyGroup type and method).",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-study-groups-frontend-page-to-provide-a-visible-responsive-join-group-option-for-each-study-group-and-show-clear-feedback-loading-disabled-state-success-toast-readable-error-toast-when-joining",
+      "title": "Update the Study Groups frontend page to provide a visible, responsive 'Join Group' option for each study group and show clear feedback (loading/disabled state, success toast, readable error toast) when joining.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-study-group-chat-ui-in-the-frontend-that-becomes-accessible-once-a-user-has-joined-a-study-group-allowing-members-to-read-the-group-s-message-history-and-send-new-messages",
+      "title": "Add a Study Group chat UI in the frontend that becomes accessible once a user has joined a study group, allowing members to read the group’s message history and send new messages.",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-frontend-study-groups-page-to-display-a-clear-readable-error-message-when-study-group-creation-fails-due-to-content-moderation",
+      "title": "Update the frontend Study Groups page to display a clear, readable error message when study group creation fails due to content moderation",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -416,6 +473,64 @@
       "summary": "Update backend feed access so users without a profile can still retrieve and view the feed (required to support posting/commenting workflows for users without profiles).",
       "reqIds": [
         "REQ-20"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Improve backend error messaging for study-group creation when a logged-in caller lacks a profile by returning a study-group-specific message (do not reuse an unrelated message like \"User must have a profile to create posts and comments!\").",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Add a working \"Join Study Group\" option in the Study Group page/UI so logged-in users can join groups (button visible and responsive, with feedback and membership update).",
+      "reqIds": [],
+      "status": "in_progress"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Add in-group chat so study group members can exchange messages within a study group (group chat tied to membership).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "Add backend canister APIs to support Study Group membership changes so a logged-in user can join a study group and the updated membership is persisted and returned by study-group retrieval/listing APIs.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Add backend canister APIs and storage for Study Group chat so that only study group members can send messages to the group and members can fetch the group chat history.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Automatic content moderation for study groups: reject/delete groups with sensitive/banned keywords in description at creation time",
+      "reqIds": [],
+      "status": "in_progress"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Define a predefined list of banned/sensitive keywords in the backend that includes profanity, hate speech, spam terms, and non-academic content indicators",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Implement automatic validation in the createStudyGroup backend method that scans the group description for any banned keywords and completely rejects the creation if sensitive words are detected",
+      "reqIds": [
+        "REQ-34"
       ],
       "status": "pending"
     }

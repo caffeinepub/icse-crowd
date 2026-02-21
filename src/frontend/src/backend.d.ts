@@ -15,6 +15,13 @@ export class ExternalBlob {
     withUploadProgress(onProgress: (percentage: number) => void): ExternalBlob;
 }
 export type Time = bigint;
+export interface StudyGroup {
+    id: bigint;
+    creator: Principal;
+    members: Array<Principal>;
+    name: string;
+    description: string;
+}
 export interface Comment {
     id: bigint;
     content: string;
@@ -49,6 +56,12 @@ export interface UserProfile {
     email: string;
     academicDetails: string;
 }
+export interface StudyGroupMessage {
+    id: bigint;
+    content: string;
+    sender: Principal;
+    timestamp: Time;
+}
 export enum UserRole {
     admin = "admin",
     user = "user",
@@ -73,21 +86,26 @@ export interface backendInterface {
     deleteForumPost(forumId: bigint): Promise<void>;
     deletePost(postId: bigint): Promise<void>;
     deletePostByAuthor(postId: bigint): Promise<void>;
+    getAllStudyGroups(): Promise<Array<StudyGroup>>;
     getAllUsers(): Promise<Array<UserProfile>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getFeed(): Promise<Array<Post>>;
     getPostComments(postId: bigint): Promise<Array<Comment>>;
     getReports(): Promise<Array<Report>>;
+    getStudyGroup(groupId: bigint): Promise<StudyGroup | null>;
+    getStudyGroupMessages(groupId: bigint): Promise<Array<StudyGroupMessage>>;
     getUserComments(user: Principal): Promise<Array<Comment>>;
     getUserPosts(user: Principal): Promise<Array<Post>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
+    joinStudyGroup(groupId: bigint): Promise<void>;
     likePost(postId: bigint): Promise<void>;
     reportContent(reportedUser: Principal | null, reportedContent: string | null, reason: string): Promise<void>;
     reviewReport(reportId: bigint, newStatus: Variant_resolved_pending_reviewed): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     sendFriendRequest(to: Principal): Promise<void>;
     sendMessage(to: Principal, content: string): Promise<void>;
+    sendStudyGroupMessage(groupId: bigint, content: string): Promise<void>;
     updatePost(postId: bigint, content: string, image: ExternalBlob | null, video: ExternalBlob | null, document: ExternalBlob | null): Promise<void>;
 }

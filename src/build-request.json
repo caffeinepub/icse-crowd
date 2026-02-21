@@ -1,105 +1,85 @@
 {
   "kind": "build_request",
-  "title": "Allow posting and commenting without a user profile and display authors as “Guest” when no profile exists",
-  "priority": "high",
+  "title": "Add automatic content moderation for study groups",
+  "projectName": "ICSE Crowd",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-19",
-      "text": "Remove the backend profile-existence enforcement for creating posts and adding comments so an authenticated caller can create posts and comments even when they have not created a UserProfile.",
+      "id": "REQ-33",
+      "text": "Define a predefined list of banned/sensitive keywords in the backend that includes profanity, hate speech, spam terms, and non-academic content indicators",
       "target": "backend",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-user-1",
+          "msg-user-2",
+          "msg-assistant-2"
         ],
         "quotes": [
-          "Allow everyone to post irrespective they have profile or not",
-          "1 yes 2 yes  3 yes"
+          "yes",
+          "predefined list of banned/sensitive keywords (profanity, hate speech, spam terms, non-academic content)"
         ]
       },
       "acceptanceCriteria": [
-        "Calling `createPost(...)` no longer traps with \"User must have a profile to create posts and comments!\" when the caller has no stored profile.",
-        "Calling `addComment(postId, content)` no longer traps with \"User must have a profile to create posts and comments!\" when the caller has no stored profile.",
-        "Existing authorization checks (e.g., permission checks) remain in place; only the profile-existence requirement is removed for these two actions."
+        "Backend contains a defined list of banned keywords covering profanity, hate speech, spam, and non-academic terms",
+        "The keyword list is case-insensitive when used for matching",
+        "The list is maintainable and can be extended in future updates"
       ]
     },
     {
-      "id": "REQ-20",
-      "text": "Update backend feed access so users without a profile can still retrieve and view the feed (required to support posting/commenting workflows for users without profiles).",
+      "id": "REQ-34",
+      "text": "Implement automatic validation in the createStudyGroup backend method that scans the group description for any banned keywords and completely rejects the creation if sensitive words are detected",
       "target": "backend",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-user-1",
+          "msg-user-2",
+          "msg-assistant-2"
         ],
         "quotes": [
-          "Allow everyone to post irrespective they have profile or not"
+          "completely deleted from the system",
+          "This check will happen automatically when groups are created"
         ]
       },
       "acceptanceCriteria": [
-        "Calling `getFeed()` no longer traps solely because the caller has no profile.",
-        "The feed still returns the same Post data as before for callers with profiles."
+        "The createStudyGroup method validates the description against the banned keyword list before creating the group",
+        "If any banned keyword is found, the method returns an error result and no study group is created or stored",
+        "The validation is case-insensitive to catch variations of banned words",
+        "The error message clearly indicates that the group description contains inappropriate content"
       ]
     },
     {
-      "id": "REQ-21",
-      "text": "Update the Post creation UI to allow posting without a profile: remove the UI block/disable logic that prevents composing and submitting posts when `useGetCallerUserProfile()` returns null.",
+      "id": "REQ-35",
+      "text": "Update the frontend Study Groups page to display a clear, readable error message when study group creation fails due to content moderation",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-user-2",
+          "msg-assistant-2"
         ],
         "quotes": [
-          "2 yes"
+          "Real-time prevention so inappropriate groups never make it into the platform"
         ]
       },
       "acceptanceCriteria": [
-        "The post composer textarea, attachment buttons, and Post submit button are usable even when the current user has no profile.",
-        "Submitting a post without a profile attempts the backend `createPost` call and shows success/error toasts based on the result (no frontend-side \"Please create a profile before posting\" hard-block)."
-      ]
-    },
-    {
-      "id": "REQ-22",
-      "text": "Update the Comment creation UI to allow commenting without a profile: remove the UI gating that hides/disables the comment input and submission when the current user has no profile.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "recent-messages"
-        ],
-        "quotes": [
-          "2 yes"
-        ]
-      },
-      "acceptanceCriteria": [
-        "When comments are expanded on a post, the comment input and submit action are available even if the current user has no profile.",
-        "Submitting a comment without a profile triggers the existing comment mutation and updates the comments list via existing query invalidation."
-      ]
-    },
-    {
-      "id": "REQ-23",
-      "text": "Display a placeholder author name of \"Guest\" for any post or comment whose author does not have a user profile available to the frontend (profile lookup returns null).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "recent-messages"
-        ],
-        "quotes": [
-          "3 yes"
-        ]
-      },
-      "acceptanceCriteria": [
-        "In the feed UI, posts authored by principals without a profile show author name \"Guest\" instead of \"Unknown user\" (or a principal placeholder).",
-        "In the comments UI, comments authored by principals without a profile show author name \"Guest\" instead of \"Unknown user\" (or a principal placeholder).",
-        "Avatar fallbacks remain functional for users without profiles (no runtime errors when profile is missing)."
+        "When the backend rejects a study group due to banned keywords, the frontend displays a toast or alert with a user-friendly error message",
+        "The error message clearly states that the description contains inappropriate content",
+        "The Create Study Group dialog remains open so the user can edit the description and retry",
+        "The error handling uses the existing normalizeICError utility for consistent error display"
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in `backend/main.mo` (no additional backend services).",
-    "Do not edit files under `frontend/src/components/ui/*` or the immutable hook/entry files listed in SYSTEM_CONTEXT."
+    "Do not modify the study group data model structure; only add validation logic to createStudyGroup",
+    "Maintain the single-actor architecture in backend/main.mo",
+    "Use existing error handling patterns from the backend (e.g., #err for validation failures)",
+    "Preserve the existing Study Groups page UI structure and dialog flow"
   ],
   "nonGoals": [
-    "Changing posting/commenting permissions for unauthenticated (not signed-in) users.",
-    "Implementing a new guest/anonymous identity system; the backend still attributes posts/comments to the caller principal.",
-    "Changing profile creation UX beyond removing the posting/commenting gate."
+    "Admin tools for dynamically adding/removing keywords from the banned list",
+    "Retroactive scanning of existing study groups",
+    "Content moderation for other entities (posts, comments, messages)",
+    "Machine learning or AI-based content detection",
+    "Partial word matching or fuzzy matching for keywords"
   ],
   "imageRequirements": {
     "required": [],
