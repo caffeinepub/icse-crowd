@@ -1,0 +1,24 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Add automatic content moderation for study groups",
+  "requirements": [
+    {
+      "id": "REQ-35",
+      "summary": "Display clear error message when study group creation fails due to content moderation",
+      "acceptanceCriteria": [
+        "When the backend rejects a study group due to banned keywords, the frontend displays a toast or alert with a user-friendly error message",
+        "The error message clearly states that the description contains inappropriate content",
+        "The Create Study Group dialog remains open so the user can edit the description and retry",
+        "The error handling uses the existing normalizeICError utility for consistent error display"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/StudyGroupsPage.tsx",
+          "operation": "modify",
+          "description": "Update the handleCreateGroup function to catch and display content moderation errors from the backend. When createStudyGroup fails with a validation error indicating inappropriate content, show a toast message using the existing toast system and keep the dialog open so the user can edit the description. Use the normalizeICError utility from frontend/src/utils/icErrors.ts to format the error message consistently. Ensure the error message clearly communicates that the description contains inappropriate or banned content and prompts the user to revise it."
+        }
+      ]
+    }
+  ]
+}

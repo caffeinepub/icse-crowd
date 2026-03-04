@@ -1,0 +1,88 @@
+{
+  "kind": "build_request",
+  "title": "Add automatic content moderation for study groups",
+  "projectName": "ICSE Crowd",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-33",
+      "text": "Define a predefined list of banned/sensitive keywords in the backend that includes profanity, hate speech, spam terms, and non-academic content indicators",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-user-1",
+          "msg-user-2",
+          "msg-assistant-2"
+        ],
+        "quotes": [
+          "yes",
+          "predefined list of banned/sensitive keywords (profanity, hate speech, spam terms, non-academic content)"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend contains a defined list of banned keywords covering profanity, hate speech, spam, and non-academic terms",
+        "The keyword list is case-insensitive when used for matching",
+        "The list is maintainable and can be extended in future updates"
+      ]
+    },
+    {
+      "id": "REQ-34",
+      "text": "Implement automatic validation in the createStudyGroup backend method that scans the group description for any banned keywords and completely rejects the creation if sensitive words are detected",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-user-1",
+          "msg-user-2",
+          "msg-assistant-2"
+        ],
+        "quotes": [
+          "completely deleted from the system",
+          "This check will happen automatically when groups are created"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The createStudyGroup method validates the description against the banned keyword list before creating the group",
+        "If any banned keyword is found, the method returns an error result and no study group is created or stored",
+        "The validation is case-insensitive to catch variations of banned words",
+        "The error message clearly indicates that the group description contains inappropriate content"
+      ]
+    },
+    {
+      "id": "REQ-35",
+      "text": "Update the frontend Study Groups page to display a clear, readable error message when study group creation fails due to content moderation",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-2",
+          "msg-assistant-2"
+        ],
+        "quotes": [
+          "Real-time prevention so inappropriate groups never make it into the platform"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When the backend rejects a study group due to banned keywords, the frontend displays a toast or alert with a user-friendly error message",
+        "The error message clearly states that the description contains inappropriate content",
+        "The Create Study Group dialog remains open so the user can edit the description and retry",
+        "The error handling uses the existing normalizeICError utility for consistent error display"
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify the study group data model structure; only add validation logic to createStudyGroup",
+    "Maintain the single-actor architecture in backend/main.mo",
+    "Use existing error handling patterns from the backend (e.g., #err for validation failures)",
+    "Preserve the existing Study Groups page UI structure and dialog flow"
+  ],
+  "nonGoals": [
+    "Admin tools for dynamically adding/removing keywords from the banned list",
+    "Retroactive scanning of existing study groups",
+    "Content moderation for other entities (posts, comments, messages)",
+    "Machine learning or AI-based content detection",
+    "Partial word matching or fuzzy matching for keywords"
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

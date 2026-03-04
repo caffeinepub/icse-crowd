@@ -1,0 +1,15 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-21T13:27:12.713Z",
+  "summary": "The diff implements all three requirements for automatic content moderation. REQ-33 is satisfied by a banned keyword list in the backend. REQ-34 is satisfied by validation logic in createStudyGroup that scans descriptions and rejects groups containing banned words. REQ-35 is satisfied by frontend error handling that displays user-friendly messages and keeps the dialog open for retry.",
+  "missing_requirements": [],
+  "hallucinated_features": [],
+  "confidence": 0.92,
+  "changed_files": [
+    "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/pages/StudyGroupsPage.tsx",
+    "project_state.json"
+  ]
+}
