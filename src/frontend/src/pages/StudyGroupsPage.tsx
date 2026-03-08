@@ -1,26 +1,42 @@
-import { useState } from 'react';
-import { useCreateStudyGroup, useGetAllStudyGroups, useJoinStudyGroup } from '../hooks/useQueries';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Plus, Users, BookOpen, MessageCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import { normalizeICError } from '../utils/icErrors';
-import StudyGroupChatDialog from '../components/StudyGroupChatDialog';
-import type { StudyGroup } from '../backend';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { BookOpen, MessageCircle, Plus, Users } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import type { StudyGroup } from "../backend";
+import StudyGroupChatDialog from "../components/StudyGroupChatDialog";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import {
+  useCreateStudyGroup,
+  useGetAllStudyGroups,
+  useJoinStudyGroup,
+} from "../hooks/useQueries";
+import { normalizeICError } from "../utils/icErrors";
 
 export default function StudyGroupsPage() {
   const { identity } = useInternetIdentity();
   const createStudyGroup = useCreateStudyGroup();
   const joinStudyGroup = useJoinStudyGroup();
-  const { data: studyGroups = [], isLoading: groupsLoading } = useGetAllStudyGroups();
+  const { data: studyGroups = [], isLoading: groupsLoading } =
+    useGetAllStudyGroups();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [groupName, setGroupName] = useState('');
-  const [groupDescription, setGroupDescription] = useState('');
+  const [groupName, setGroupName] = useState("");
+  const [groupDescription, setGroupDescription] = useState("");
   const [selectedGroup, setSelectedGroup] = useState<StudyGroup | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -29,7 +45,7 @@ export default function StudyGroupsPage() {
 
   const handleOpenDialog = () => {
     if (!isAuthenticated) {
-      toast.error('Please log in to create a study group');
+      toast.error("Please log in to create a study group");
       return;
     }
     setIsDialogOpen(true);
@@ -39,33 +55,40 @@ export default function StudyGroupsPage() {
     e.preventDefault();
 
     if (!isAuthenticated) {
-      toast.error('Please log in to create a study group');
+      toast.error("Please log in to create a study group");
       return;
     }
 
     if (!groupName.trim()) {
-      toast.error('Please enter a group name');
+      toast.error("Please enter a group name");
       return;
     }
 
     try {
-      await createStudyGroup.mutateAsync({ name: groupName, description: groupDescription });
-      toast.success('Study group created successfully!');
-      setGroupName('');
-      setGroupDescription('');
+      await createStudyGroup.mutateAsync({
+        name: groupName,
+        description: groupDescription,
+      });
+      toast.success("Study group created successfully!");
+      setGroupName("");
+      setGroupDescription("");
       setIsDialogOpen(false);
     } catch (error: unknown) {
       const errorMessage = normalizeICError(error);
-      
+
       // Check if this is a content moderation error
-      if (errorMessage.toLowerCase().includes('illegal') || 
-          errorMessage.toLowerCase().includes('inappropriate') ||
-          errorMessage.toLowerCase().includes('banned')) {
-        toast.error('Description contains inappropriate content. Please revise and try again.');
+      if (
+        errorMessage.toLowerCase().includes("illegal") ||
+        errorMessage.toLowerCase().includes("inappropriate") ||
+        errorMessage.toLowerCase().includes("banned")
+      ) {
+        toast.error(
+          "Description contains inappropriate content. Please revise and try again.",
+        );
       } else {
         toast.error(errorMessage);
       }
-      
+
       // Keep dialog open so user can edit and retry
       // Do not close the dialog or reset form fields
     }
@@ -73,13 +96,13 @@ export default function StudyGroupsPage() {
 
   const handleJoinGroup = async (groupId: bigint) => {
     if (!isAuthenticated) {
-      toast.error('Please log in to join a study group');
+      toast.error("Please log in to join a study group");
       return;
     }
 
     try {
       await joinStudyGroup.mutateAsync(groupId);
-      toast.success('Successfully joined the study group!');
+      toast.success("Successfully joined the study group!");
     } catch (error: unknown) {
       const errorMessage = normalizeICError(error);
       toast.error(errorMessage);
@@ -93,7 +116,9 @@ export default function StudyGroupsPage() {
 
   const isMember = (group: StudyGroup): boolean => {
     if (!currentPrincipal) return false;
-    return group.members.some(member => member.toString() === currentPrincipal);
+    return group.members.some(
+      (member) => member.toString() === currentPrincipal,
+    );
   };
 
   return (
@@ -101,7 +126,9 @@ export default function StudyGroupsPage() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Study Groups</h1>
-          <p className="text-muted-foreground">Collaborate with classmates and share knowledge</p>
+          <p className="text-muted-foreground">
+            Collaborate with classmates and share knowledge
+          </p>
         </div>
         <Button onClick={handleOpenDialog}>
           <Plus className="mr-2 h-4 w-4" />
@@ -135,8 +162,12 @@ export default function StudyGroupsPage() {
                 rows={3}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={createStudyGroup.isPending}>
-              {createStudyGroup.isPending ? 'Creating...' : 'Create Group'}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={createStudyGroup.isPending}
+            >
+              {createStudyGroup.isPending ? "Creating..." : "Create Group"}
             </Button>
           </form>
         </DialogContent>
@@ -183,12 +214,17 @@ export default function StudyGroupsPage() {
                     <BookOpen className="h-6 w-6 text-primary" />
                   </div>
                   <CardTitle>{group.name}</CardTitle>
-                  <CardDescription>{group.description || 'No description provided'}</CardDescription>
+                  <CardDescription>
+                    {group.description || "No description provided"}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Users className="h-4 w-4" />
-                    <span>{group.members.length} {group.members.length === 1 ? 'member' : 'members'}</span>
+                    <span>
+                      {group.members.length}{" "}
+                      {group.members.length === 1 ? "member" : "members"}
+                    </span>
                   </div>
                   {isAuthenticated && (
                     <div className="flex gap-2">
@@ -218,7 +254,9 @@ export default function StudyGroupsPage() {
                           onClick={() => handleJoinGroup(group.id)}
                           disabled={joinStudyGroup.isPending}
                         >
-                          {joinStudyGroup.isPending ? 'Joining...' : 'Join Group'}
+                          {joinStudyGroup.isPending
+                            ? "Joining..."
+                            : "Join Group"}
                         </Button>
                       )}
                     </div>

@@ -1,11 +1,12 @@
 import Array "mo:core/Array";
-import Iter "mo:core/Iter";
+import List "mo:core/List";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Nat "mo:core/Nat";
-import List "mo:core/List";
+import Iter "mo:core/Iter";
 import Order "mo:core/Order";
 import Map "mo:core/Map";
+import Set "mo:core/Set";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Storage "blob-storage/Storage";
@@ -139,6 +140,8 @@ actor {
   let forumPosts = Map.empty<Nat, ForumPost>();
   let reports = Map.empty<Nat, Report>();
   let studyGroupMessages = Map.empty<Nat, List.List<StudyGroupMessage>>();
+  let dynamicBannedWords = Map.empty<Text, ()>();
+  let suspendedUsers = Set.empty<Principal>();
 
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -239,8 +242,15 @@ actor {
     };
   };
 
+  func checkSuspendedUser(caller : Principal) : () {
+    if (suspendedUsers.contains(caller)) {
+      Runtime.trap("Your account is currently suspended. You cannot perform this action.");
+    };
+  };
+
   public shared ({ caller }) func sendFriendRequest(to : Principal) : async () {
     checkUserProfileExists(caller);
+    checkSuspendedUser(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can send friend requests");
     };
@@ -273,13 +283,13 @@ actor {
 
   public shared ({ caller }) func acceptFriendRequest(from : Principal) : async () {
     checkUserProfileExists(caller);
+    checkSuspendedUser(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can accept friend requests");
     };
     switch (friendRequests.get((from, caller))) {
       case (null) { Runtime.trap("Friend request not found") };
       case (?request) {
-        // Verify the request is actually for the caller
         if (request.to != caller) {
           Runtime.trap("Unauthorized: You can only accept friend requests sent to you");
         };
@@ -293,6 +303,7 @@ actor {
       Runtime.trap("Unauthorized: Only users can create posts");
     };
 
+    checkSuspendedUser(caller);
     validateVideoSize(video);
 
     let id = generateUniqueId();
@@ -312,6 +323,7 @@ actor {
 
   public shared ({ caller }) func likePost(postId : Nat) : async () {
     checkUserProfileExists(caller);
+    checkSuspendedUser(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can like posts");
     };
@@ -331,6 +343,7 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can add comments");
     };
+    checkSuspendedUser(caller);
     if (not posts.containsKey(postId)) {
       Runtime.trap("Post not found");
     };
@@ -354,6 +367,7 @@ actor {
 
   public shared ({ caller }) func sendMessage(to : Principal, content : Text) : async () {
     checkUserProfileExists(caller);
+    checkSuspendedUser(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can send messages");
     };
@@ -765,13 +779,19 @@ actor {
       "transgendered",
       "transsexual",
       "transvestite",
-      "wrist-bands"
+      "wrist-bands",
     ];
 
     let lowerText = text.toLower();
     for (word in bannedWords.values()) {
       if (lowerText.contains(#text(word))) { return true };
     };
+    for (dynamicWord in dynamicBannedWords.keys()) {
+      if (lowerText.contains(#text(dynamicWord))) {
+        return true;
+      };
+    };
+
     false;
   };
 
@@ -784,12 +804,13 @@ actor {
       Runtime.trap("Unauthorized: Only users can create study groups");
     };
 
+    checkSuspendedUser(caller);
     if (name.size() == 0) {
       Runtime.trap("Group name cannot be empty");
     };
 
-    if (containsBannedWord(description)) {
-      Runtime.trap("Description contains illegal words, terms or information");
+    if (containsBannedWord(description) or containsBannedWord(name)) {
+      Runtime.trap("Group name or description contains illegal terms/information");
     };
 
     let id = generateUniqueId();
@@ -812,6 +833,7 @@ actor {
       Runtime.trap("Unauthorized: Only users can join study groups");
     };
 
+    checkSuspendedUser(caller);
     switch (studyGroups.get(groupId)) {
       case (null) { Runtime.trap("Study group not found") };
       case (?group) {
@@ -847,6 +869,12 @@ actor {
 
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can send study group messages");
+    };
+
+    checkSuspendedUser(caller);
+
+    if (containsBannedWord(content)) {
+      Runtime.trap("Message contains banned words and cannot be sent");
     };
 
     switch (studyGroups.get(groupId)) {
@@ -896,6 +924,7 @@ actor {
 
   public shared ({ caller }) func addSharedNote(groupId : Nat, content : Text) : async () {
     checkUserProfileExists(caller);
+    checkSuspendedUser(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can add shared notes");
     };
@@ -920,6 +949,7 @@ actor {
 
   public shared ({ caller }) func createForumPost(subject : Text, content : Text) : async () {
     checkUserProfileExists(caller);
+    checkSuspendedUser(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create forum posts");
     };
@@ -940,6 +970,7 @@ actor {
     reason : Text,
   ) : async () {
     checkUserProfileExists(caller);
+    checkSuspendedUser(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can report content");
     };
@@ -958,6 +989,7 @@ actor {
 
   public shared ({ caller }) func blockUser(user : Principal) : async () {
     checkUserProfileExists(caller);
+    checkSuspendedUser(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can block other users");
     };
@@ -1035,6 +1067,7 @@ actor {
 
   public shared ({ caller }) func updatePost(postId : Nat, content : Text, image : ?Storage.ExternalBlob, video : ?Storage.ExternalBlob, document : ?Storage.ExternalBlob) : async () {
     checkUserProfileExists(caller);
+    checkSuspendedUser(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can update posts");
     };
@@ -1061,6 +1094,7 @@ actor {
 
   public shared ({ caller }) func deletePostByAuthor(postId : Nat) : async () {
     checkUserProfileExists(caller);
+    checkSuspendedUser(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can delete their own posts");
     };
@@ -1077,6 +1111,7 @@ actor {
 
   public shared ({ caller }) func getUserPosts(user : Principal) : async [Post] {
     checkUserProfileExists(caller);
+    checkSuspendedUser(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view posts");
     };
@@ -1085,6 +1120,7 @@ actor {
 
   public shared ({ caller }) func getUserComments(user : Principal) : async [Comment] {
     checkUserProfileExists(caller);
+    checkSuspendedUser(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view comments");
     };
@@ -1093,9 +1129,106 @@ actor {
 
   public shared ({ caller }) func getPostComments(postId : Nat) : async [Comment] {
     checkUserProfileExists(caller);
+    checkSuspendedUser(caller);
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view comments");
     };
     comments.values().toArray().filter(func(comment) { comment.postId == postId });
+  };
+
+  // =====================
+  // ADMIN PANEL FUNCTIONS
+  // =====================
+
+  public shared ({ caller }) func addBannedWord(word : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add banned words");
+    };
+    dynamicBannedWords.add(word.toLower(), ());
+  };
+
+  public shared ({ caller }) func removeBannedWord(word : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can remove banned words");
+    };
+    dynamicBannedWords.remove(word.toLower());
+  };
+
+  public shared ({ caller }) func listBannedWords() : async [Text] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view banned words");
+    };
+    let dynamic = dynamicBannedWords.keys().toArray();
+    dynamic;
+  };
+
+  public shared ({ caller }) func suspendUser(user : Principal) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can suspend users");
+    };
+    suspendedUsers.add(user);
+  };
+
+  public shared ({ caller }) func unsuspendUser(user : Principal) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can unsuspend users");
+    };
+    suspendedUsers.remove(user);
+  };
+
+  public shared ({ caller }) func getSuspendedUsers() : async [Principal] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view suspended users");
+    };
+    suspendedUsers.toArray();
+  };
+
+  public shared ({ caller }) func deleteStudyGroup(groupId : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete study groups");
+    };
+    if (not studyGroups.containsKey(groupId)) {
+      Runtime.trap("Study group not found");
+    };
+    studyGroups.remove(groupId);
+  };
+
+  public shared ({ caller }) func scanAndDeleteBannedGroups() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    let groups = studyGroups.values().toArray();
+    for (group in groups.values()) {
+      if (containsBannedWord(group.name) or containsBannedWord(group.description)) {
+        studyGroups.remove(group.id);
+      };
+    };
+  };
+
+  public shared ({ caller }) func getAllPosts() : async [Post] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view all posts");
+    };
+    posts.values().toArray();
+  };
+
+  public shared ({ caller }) func getAllComments() : async [Comment] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view all comments");
+    };
+    comments.values().toArray();
+  };
+
+  public shared ({ caller }) func getPlatformStats() : async (Nat, Nat, Nat, Nat, Nat) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view platform stats");
+    };
+    let totalUsers = userProfiles.size();
+    let totalPosts = posts.size();
+    let totalComments = comments.size();
+    let totalGroups = studyGroups.size();
+    let totalReports = reports.size();
+    (totalUsers, totalPosts, totalComments, totalGroups, totalReports);
   };
 };

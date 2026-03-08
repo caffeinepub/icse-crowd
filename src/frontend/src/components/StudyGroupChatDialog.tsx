@@ -1,17 +1,26 @@
-import { useState, useEffect, useRef } from 'react';
-import { useGetStudyGroupMessages, useSendStudyGroupMessage, useGetUserProfile } from '../hooks/useQueries';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { normalizeICError } from '../utils/icErrors';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { getUserInitials } from '../utils/userDisplay';
-import type { StudyGroup } from '../backend';
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2, Send } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import type { StudyGroup } from "../backend";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import {
+  useGetStudyGroupMessages,
+  useGetUserProfile,
+  useSendStudyGroupMessage,
+} from "../hooks/useQueries";
+import { normalizeICError } from "../utils/icErrors";
+import { getUserInitials } from "../utils/userDisplay";
 
 interface StudyGroupChatDialogProps {
   group: StudyGroup;
@@ -19,19 +28,25 @@ interface StudyGroupChatDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function StudyGroupChatDialog({ group, open, onOpenChange }: StudyGroupChatDialogProps) {
+export default function StudyGroupChatDialog({
+  group,
+  open,
+  onOpenChange,
+}: StudyGroupChatDialogProps) {
   const { identity } = useInternetIdentity();
-  const [messageContent, setMessageContent] = useState('');
+  const [messageContent, setMessageContent] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const currentPrincipal = identity?.getPrincipal().toString();
 
-  const { data: messages = [], isLoading, isError, error } = useGetStudyGroupMessages(
-    group.id,
-    { 
-      enabled: open,
-      refetchInterval: open ? 3000 : undefined, // Poll every 3 seconds when chat is open
-    }
-  );
+  const {
+    data: messages = [],
+    isLoading,
+    isError,
+    error,
+  } = useGetStudyGroupMessages(group.id, {
+    enabled: open,
+    refetchInterval: open ? 3000 : undefined, // Poll every 3 seconds when chat is open
+  });
 
   const sendMessage = useSendStudyGroupMessage();
 
@@ -40,7 +55,7 @@ export default function StudyGroupChatDialog({ group, open, onOpenChange }: Stud
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, []);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +69,7 @@ export default function StudyGroupChatDialog({ group, open, onOpenChange }: Stud
         groupId: group.id,
         content: messageContent.trim(),
       });
-      setMessageContent('');
+      setMessageContent("");
     } catch (error: unknown) {
       const errorMessage = normalizeICError(error);
       toast.error(errorMessage);
@@ -89,7 +104,8 @@ export default function StudyGroupChatDialog({ group, open, onOpenChange }: Stud
             ) : (
               <div className="space-y-4 pb-4">
                 {messages.map((message) => {
-                  const isOwnMessage = message.sender.toString() === currentPrincipal;
+                  const isOwnMessage =
+                    message.sender.toString() === currentPrincipal;
                   return (
                     <MessageItem
                       key={message.id.toString()}
@@ -130,7 +146,7 @@ export default function StudyGroupChatDialog({ group, open, onOpenChange }: Stud
 interface MessageItemProps {
   message: {
     id: bigint;
-    sender: import('@dfinity/principal').Principal;
+    sender: import("@dfinity/principal").Principal;
     content: string;
     timestamp: bigint;
   };
@@ -139,23 +155,32 @@ interface MessageItemProps {
 
 function MessageItem({ message, isOwnMessage }: MessageItemProps) {
   const { data: senderProfile } = useGetUserProfile(message.sender);
-  const senderName = senderProfile?.name || 'Guest';
+  const senderName = senderProfile?.name || "Guest";
   const initials = getUserInitials(senderName);
 
   const timestamp = new Date(Number(message.timestamp) / 1000000);
-  const timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const timeString = timestamp.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   return (
-    <div className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div
+      className={`flex gap-3 ${isOwnMessage ? "flex-row-reverse" : "flex-row"}`}
+    >
       <Avatar className="h-8 w-8 flex-shrink-0">
         <AvatarFallback className="text-xs">{initials}</AvatarFallback>
       </Avatar>
-      <div className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'} max-w-[70%]`}>
+      <div
+        className={`flex flex-col ${isOwnMessage ? "items-end" : "items-start"} max-w-[70%]`}
+      >
         <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
           <span className="font-medium">{senderName}</span>
           <span>{timeString}</span>
         </div>
-        <Card className={`px-3 py-2 ${isOwnMessage ? 'bg-primary text-primary-foreground' : ''}`}>
+        <Card
+          className={`px-3 py-2 ${isOwnMessage ? "bg-primary text-primary-foreground" : ""}`}
+        >
           <p className="text-sm break-words">{message.content}</p>
         </Card>
       </div>

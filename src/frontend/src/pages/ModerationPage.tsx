@@ -1,8 +1,12 @@
-import { useGetReports, useReviewReport, useDeletePost, useGetAllUsers } from '../hooks/useQueries';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -10,35 +14,51 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Shield, AlertTriangle, CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { formatDistanceToNow } from 'date-fns';
-import { Variant_resolved_pending_reviewed } from '../backend';
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatDistanceToNow } from "date-fns";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Loader2,
+  Shield,
+  XCircle,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Variant_resolved_pending_reviewed } from "../backend";
+import {
+  useDeletePost,
+  useGetAllUsers,
+  useGetReports,
+  useReviewReport,
+} from "../hooks/useQueries";
 
 export default function ModerationPage() {
   const { data: reports, isLoading: reportsLoading } = useGetReports();
   const { data: allUsers, isLoading: usersLoading } = useGetAllUsers();
   const reviewReport = useReviewReport();
-  const deletePost = useDeletePost();
+  const _deletePost = useDeletePost();
 
-  const handleReviewReport = async (reportId: bigint, status: Variant_resolved_pending_reviewed) => {
+  const handleReviewReport = async (
+    reportId: bigint,
+    status: Variant_resolved_pending_reviewed,
+  ) => {
     try {
       await reviewReport.mutateAsync({ reportId, newStatus: status });
       toast.success(`Report marked as ${status}`);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update report');
+      toast.error(error.message || "Failed to update report");
     }
   };
 
   const getStatusBadge = (status: Variant_resolved_pending_reviewed) => {
     if (status === Variant_resolved_pending_reviewed.pending) {
       return <Badge variant="outline">Pending</Badge>;
-    } else if (status === Variant_resolved_pending_reviewed.reviewed) {
-      return <Badge variant="secondary">Reviewed</Badge>;
-    } else {
-      return <Badge>Resolved</Badge>;
     }
+    if (status === Variant_resolved_pending_reviewed.reviewed) {
+      return <Badge variant="secondary">Reviewed</Badge>;
+    }
+    return <Badge>Resolved</Badge>;
   };
 
   if (reportsLoading || usersLoading) {
@@ -51,9 +71,18 @@ export default function ModerationPage() {
     );
   }
 
-  const pendingReports = reports?.filter((r) => r.status === Variant_resolved_pending_reviewed.pending) || [];
-  const reviewedReports = reports?.filter((r) => r.status === Variant_resolved_pending_reviewed.reviewed) || [];
-  const resolvedReports = reports?.filter((r) => r.status === Variant_resolved_pending_reviewed.resolved) || [];
+  const pendingReports =
+    reports?.filter(
+      (r) => r.status === Variant_resolved_pending_reviewed.pending,
+    ) || [];
+  const reviewedReports =
+    reports?.filter(
+      (r) => r.status === Variant_resolved_pending_reviewed.reviewed,
+    ) || [];
+  const resolvedReports =
+    reports?.filter(
+      (r) => r.status === Variant_resolved_pending_reviewed.resolved,
+    ) || [];
 
   return (
     <div className="container py-8">
@@ -63,14 +92,18 @@ export default function ModerationPage() {
         </div>
         <div>
           <h1 className="text-3xl font-bold">Moderation Dashboard</h1>
-          <p className="text-muted-foreground">Review reports and manage platform content</p>
+          <p className="text-muted-foreground">
+            Review reports and manage platform content
+          </p>
         </div>
       </div>
 
       <div className="mb-8 grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Reports</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Pending Reports
+            </CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -145,9 +178,12 @@ export default function ModerationPage() {
                         </TableCell>
                         <TableCell>{report.reason}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(Number(report.timestamp) / 1000000), {
-                            addSuffix: true,
-                          })}
+                          {formatDistanceToNow(
+                            new Date(Number(report.timestamp) / 1000000),
+                            {
+                              addSuffix: true,
+                            },
+                          )}
                         </TableCell>
                         <TableCell>{getStatusBadge(report.status)}</TableCell>
                         <TableCell>
@@ -155,14 +191,24 @@ export default function ModerationPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleReviewReport(report.id, Variant_resolved_pending_reviewed.reviewed)}
+                              onClick={() =>
+                                handleReviewReport(
+                                  report.id,
+                                  Variant_resolved_pending_reviewed.reviewed,
+                                )
+                              }
                               disabled={reviewReport.isPending}
                             >
                               Review
                             </Button>
                             <Button
                               size="sm"
-                              onClick={() => handleReviewReport(report.id, Variant_resolved_pending_reviewed.resolved)}
+                              onClick={() =>
+                                handleReviewReport(
+                                  report.id,
+                                  Variant_resolved_pending_reviewed.resolved,
+                                )
+                              }
                               disabled={reviewReport.isPending}
                             >
                               Resolve
@@ -208,15 +254,23 @@ export default function ModerationPage() {
                         </TableCell>
                         <TableCell>{report.reason}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(Number(report.timestamp) / 1000000), {
-                            addSuffix: true,
-                          })}
+                          {formatDistanceToNow(
+                            new Date(Number(report.timestamp) / 1000000),
+                            {
+                              addSuffix: true,
+                            },
+                          )}
                         </TableCell>
                         <TableCell>{getStatusBadge(report.status)}</TableCell>
                         <TableCell>
                           <Button
                             size="sm"
-                            onClick={() => handleReviewReport(report.id, Variant_resolved_pending_reviewed.resolved)}
+                            onClick={() =>
+                              handleReviewReport(
+                                report.id,
+                                Variant_resolved_pending_reviewed.resolved,
+                              )
+                            }
                             disabled={reviewReport.isPending}
                           >
                             Resolve
@@ -260,9 +314,12 @@ export default function ModerationPage() {
                         </TableCell>
                         <TableCell>{report.reason}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(Number(report.timestamp) / 1000000), {
-                            addSuffix: true,
-                          })}
+                          {formatDistanceToNow(
+                            new Date(Number(report.timestamp) / 1000000),
+                            {
+                              addSuffix: true,
+                            },
+                          )}
                         </TableCell>
                         <TableCell>{getStatusBadge(report.status)}</TableCell>
                       </TableRow>

@@ -1,53 +1,76 @@
-import { useState } from 'react';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetCallerUserProfile } from '../hooks/useQueries';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, MessageSquare, Shield, Mail, Copy, UserPlus } from 'lucide-react';
-import { toast } from 'sonner';
-import PostComposer from '../components/PostComposer';
-import ProfileSetupModal from '../components/ProfileSetupModal';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  BookOpen,
+  Copy,
+  Mail,
+  MessageSquare,
+  Shield,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import PostComposer from "../components/PostComposer";
+import ProfileSetupModal from "../components/ProfileSetupModal";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useGetCallerUserProfile } from "../hooks/useQueries";
 
 export default function HomePage() {
   const { identity, login, loginStatus } = useInternetIdentity();
-  const { data: currentUserProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
+  const {
+    data: currentUserProfile,
+    isLoading: profileLoading,
+    isFetched,
+  } = useGetCallerUserProfile();
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   const isAuthenticated = !!identity;
   const hasProfile = !!currentUserProfile;
-  const showCreateProfileButton = isAuthenticated && !profileLoading && isFetched && !hasProfile;
+  const showCreateProfileButton =
+    isAuthenticated && !profileLoading && isFetched && !hasProfile;
 
   const features = [
     {
       icon: Users,
-      title: 'Social Networking',
-      description: 'Connect with fellow ICSE students, share posts, and build your academic network.',
+      title: "Social Networking",
+      description:
+        "Connect with fellow ICSE students, share posts, and build your academic network.",
     },
     {
       icon: BookOpen,
-      title: 'Study Groups',
-      description: 'Create and join study groups, share notes, and collaborate on academic projects.',
+      title: "Study Groups",
+      description:
+        "Create and join study groups, share notes, and collaborate on academic projects.",
     },
     {
       icon: MessageSquare,
-      title: 'Q&A Forums',
-      description: 'Ask questions, share knowledge, and engage in academic discussions.',
+      title: "Q&A Forums",
+      description:
+        "Ask questions, share knowledge, and engage in academic discussions.",
     },
     {
       icon: Shield,
-      title: 'Safe Environment',
-      description: 'Report inappropriate content and block users to maintain a positive community.',
+      title: "Safe Environment",
+      description:
+        "Report inappropriate content and block users to maintain a positive community.",
     },
   ];
 
-  const contactEmail = 'aryananilshinde6122009@gmail.com';
+  const contactEmail = "aryananilshinde6122009@gmail.com";
 
   const handleCopyEmail = async () => {
     try {
       await navigator.clipboard.writeText(contactEmail);
-      toast.success('Email copied to clipboard!');
-    } catch (error) {
-      toast.error('Failed to copy email. Please try again.');
+      toast.success("Email copied to clipboard!");
+    } catch (_error) {
+      toast.error("Failed to copy email. Please try again.");
     }
   };
 
@@ -57,7 +80,11 @@ export default function HomePage() {
         <section className="bg-background py-8 border-b">
           <div className="container">
             <div className="flex justify-center">
-              <Button size="lg" onClick={() => setShowProfileModal(true)} className="gap-2">
+              <Button
+                size="lg"
+                onClick={() => setShowProfileModal(true)}
+                className="gap-2"
+              >
                 <UserPlus className="h-5 w-5" />
                 Create Profile
               </Button>
@@ -73,17 +100,27 @@ export default function HomePage() {
               Connect, Learn, and Grow Together
             </h1>
             <p className="mb-8 text-lg text-muted-foreground md:text-xl">
-              The social media platform designed exclusively for ICSE students. Build friendships, collaborate on
-              studies, and excel academically.
+              The social media platform designed exclusively for ICSE students.
+              Build friendships, collaborate on studies, and excel academically.
             </p>
             <div className="flex justify-center">
               {!isAuthenticated && (
-                <Button size="lg" onClick={login} disabled={loginStatus === 'logging-in'}>
-                  {loginStatus === 'logging-in' ? 'Logging in...' : 'Get Started'}
+                <Button
+                  size="lg"
+                  onClick={login}
+                  disabled={loginStatus === "logging-in"}
+                >
+                  {loginStatus === "logging-in"
+                    ? "Logging in..."
+                    : "Get Started"}
                 </Button>
               )}
               {showCreateProfileButton && (
-                <Button size="lg" onClick={() => setShowProfileModal(true)} className="gap-2">
+                <Button
+                  size="lg"
+                  onClick={() => setShowProfileModal(true)}
+                  className="gap-2"
+                >
                   <UserPlus className="h-5 w-5" />
                   Create Profile
                 </Button>
@@ -103,16 +140,19 @@ export default function HomePage() {
       <section className="py-16 md:py-24">
         <div className="container">
           <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">Everything You Need to Succeed</h2>
+            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+              Everything You Need to Succeed
+            </h2>
             <p className="text-lg text-muted-foreground">
-              A comprehensive platform combining social networking with academic collaboration
+              A comprehensive platform combining social networking with academic
+              collaboration
             </p>
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature, index) => {
+            {features.map((feature) => {
               const Icon = feature.icon;
               return (
-                <Card key={index}>
+                <Card key={feature.title}>
                   <CardHeader>
                     <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                       <Icon className="h-6 w-6 text-primary" />
@@ -133,10 +173,13 @@ export default function HomePage() {
         <div className="container">
           <div className="grid gap-12 md:grid-cols-2 md:items-center">
             <div>
-              <h2 className="mb-4 text-3xl font-bold md:text-4xl">Collaborate on Your Studies</h2>
+              <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+                Collaborate on Your Studies
+              </h2>
               <p className="mb-6 text-lg text-muted-foreground">
-                Join study groups, share notes, and work together with classmates. Our platform makes academic
-                collaboration seamless and effective.
+                Join study groups, share notes, and work together with
+                classmates. Our platform makes academic collaboration seamless
+                and effective.
               </p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
@@ -181,10 +224,13 @@ export default function HomePage() {
               />
             </div>
             <div className="order-1 md:order-2">
-              <h2 className="mb-4 text-3xl font-bold md:text-4xl">Safe and Moderated Community</h2>
+              <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+                Safe and Moderated Community
+              </h2>
               <p className="mb-6 text-lg text-muted-foreground">
-                We prioritize your safety with comprehensive moderation tools. Report inappropriate content, block
-                users, and enjoy a positive learning environment.
+                We prioritize your safety with comprehensive moderation tools.
+                Report inappropriate content, block users, and enjoy a positive
+                learning environment.
               </p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
@@ -214,12 +260,20 @@ export default function HomePage() {
       {!isAuthenticated && (
         <section className="bg-primary py-16 text-primary-foreground">
           <div className="container text-center">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">Ready to Join?</h2>
+            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+              Ready to Join?
+            </h2>
             <p className="mb-8 text-lg opacity-90">
-              Start connecting with fellow ICSE students and enhance your academic journey today.
+              Start connecting with fellow ICSE students and enhance your
+              academic journey today.
             </p>
-            <Button size="lg" variant="secondary" onClick={login} disabled={loginStatus === 'logging-in'}>
-              {loginStatus === 'logging-in' ? 'Logging in...' : 'Sign Up Now'}
+            <Button
+              size="lg"
+              variant="secondary"
+              onClick={login}
+              disabled={loginStatus === "logging-in"}
+            >
+              {loginStatus === "logging-in" ? "Logging in..." : "Sign Up Now"}
             </Button>
           </div>
         </section>
@@ -233,15 +287,26 @@ export default function HomePage() {
                 <Mail className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <h2 className="mb-4 text-2xl font-bold md:text-3xl">For Inquiries & Advertising</h2>
+            <h2 className="mb-4 text-2xl font-bold md:text-3xl">
+              For Inquiries & Advertising
+            </h2>
             <p className="mb-6 text-muted-foreground">
-              Have questions or interested in advertising opportunities? Get in touch with us.
+              Have questions or interested in advertising opportunities? Get in
+              touch with us.
             </p>
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <a href={`mailto:${contactEmail}`} className="text-lg font-medium text-primary hover:underline">
+              <a
+                href={`mailto:${contactEmail}`}
+                className="text-lg font-medium text-primary hover:underline"
+              >
                 {contactEmail}
               </a>
-              <Button variant="outline" size="sm" onClick={handleCopyEmail} className="gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyEmail}
+                className="gap-2"
+              >
                 <Copy className="h-4 w-4" />
                 Copy Email
               </Button>
@@ -255,8 +320,12 @@ export default function HomePage() {
           <div className="container">
             <div className="mx-auto max-w-2xl">
               <div className="mb-6 text-center">
-                <h2 className="mb-2 text-2xl font-bold md:text-3xl">Share Your Thoughts</h2>
-                <p className="text-muted-foreground">Create a post to connect with the ICSE community</p>
+                <h2 className="mb-2 text-2xl font-bold md:text-3xl">
+                  Share Your Thoughts
+                </h2>
+                <p className="text-muted-foreground">
+                  Create a post to connect with the ICSE community
+                </p>
               </div>
               <PostComposer />
             </div>
@@ -273,12 +342,19 @@ export default function HomePage() {
                   <UserPlus className="h-8 w-8 text-primary" />
                 </div>
               </div>
-              <h2 className="mb-4 text-2xl font-bold md:text-3xl">Complete Your Profile</h2>
+              <h2 className="mb-4 text-2xl font-bold md:text-3xl">
+                Complete Your Profile
+              </h2>
               <p className="mb-6 text-muted-foreground">
-                Create your profile to start posting, connecting with students, and joining the ICSE community.
+                Create your profile to start posting, connecting with students,
+                and joining the ICSE community.
               </p>
               <div className="flex justify-center">
-                <Button size="lg" onClick={() => setShowProfileModal(true)} className="gap-2">
+                <Button
+                  size="lg"
+                  onClick={() => setShowProfileModal(true)}
+                  className="gap-2"
+                >
                   <UserPlus className="h-5 w-5" />
                   Create Profile
                 </Button>
@@ -297,12 +373,21 @@ export default function HomePage() {
                   <MessageSquare className="h-8 w-8 text-primary" />
                 </div>
               </div>
-              <h2 className="mb-4 text-2xl font-bold md:text-3xl">Join the Conversation</h2>
+              <h2 className="mb-4 text-2xl font-bold md:text-3xl">
+                Join the Conversation
+              </h2>
               <p className="mb-6 text-muted-foreground">
-                Sign in to share posts, connect with students, and be part of the ICSE community.
+                Sign in to share posts, connect with students, and be part of
+                the ICSE community.
               </p>
-              <Button size="lg" onClick={login} disabled={loginStatus === 'logging-in'}>
-                {loginStatus === 'logging-in' ? 'Logging in...' : 'Login to Post'}
+              <Button
+                size="lg"
+                onClick={login}
+                disabled={loginStatus === "logging-in"}
+              >
+                {loginStatus === "logging-in"
+                  ? "Logging in..."
+                  : "Login to Post"}
               </Button>
             </div>
           </div>

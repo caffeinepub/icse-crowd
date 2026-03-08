@@ -8,7 +8,7 @@
  */
 export function getUserInitials(username: string): string {
   if (!username || username.trim().length === 0) {
-    return 'G';
+    return "G";
   }
 
   const trimmed = username.trim();
@@ -17,15 +17,14 @@ export function getUserInitials(username: string): string {
   if (words.length >= 2) {
     // Take first letter of first two words
     return (words[0][0] + words[1][0]).toUpperCase();
-  } else {
-    // Take first two letters of single word
-    return trimmed.slice(0, 2).toUpperCase();
   }
+  // Take first two letters of single word
+  return trimmed.slice(0, 2).toUpperCase();
 }
 
 /**
  * Returns a consistent fallback label for unknown or missing users.
  */
 export function getUnknownUserLabel(): string {
-  return 'Guest';
+  return "Guest";
 }

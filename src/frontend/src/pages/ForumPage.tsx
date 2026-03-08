@@ -1,36 +1,48 @@
-import { useState } from 'react';
-import { useCreateForumPost } from '../hooks/useQueries';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Plus, MessageSquare } from 'lucide-react';
-import { toast } from 'sonner';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { MessageSquare, Plus } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { useCreateForumPost } from "../hooks/useQueries";
 
 export default function ForumPage() {
   const createForumPost = useCreateForumPost();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [subject, setSubject] = useState('');
-  const [content, setContent] = useState('');
+  const [subject, setSubject] = useState("");
+  const [content, setContent] = useState("");
 
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!subject.trim() || !content.trim()) {
-      toast.error('Please fill in all fields');
+      toast.error("Please fill in all fields");
       return;
     }
 
     try {
       await createForumPost.mutateAsync({ subject, content });
-      toast.success('Forum post created successfully!');
-      setSubject('');
-      setContent('');
+      toast.success("Forum post created successfully!");
+      setSubject("");
+      setContent("");
       setIsDialogOpen(false);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create forum post');
+      toast.error(error.message || "Failed to create forum post");
     }
   };
 
@@ -39,7 +51,9 @@ export default function ForumPage() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Q&A Forum</h1>
-          <p className="text-muted-foreground">Ask questions and share knowledge with the community</p>
+          <p className="text-muted-foreground">
+            Ask questions and share knowledge with the community
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -74,8 +88,12 @@ export default function ForumPage() {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={createForumPost.isPending}>
-                {createForumPost.isPending ? 'Posting...' : 'Post Question'}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={createForumPost.isPending}
+              >
+                {createForumPost.isPending ? "Posting..." : "Post Question"}
               </Button>
             </form>
           </DialogContent>
@@ -106,7 +124,8 @@ export default function ForumPage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              I'm having trouble understanding the quadratic formula. Can someone explain the steps?
+              I'm having trouble understanding the quadratic formula. Can
+              someone explain the steps?
             </p>
           </CardContent>
         </Card>

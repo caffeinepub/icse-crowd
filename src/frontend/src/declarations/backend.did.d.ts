@@ -93,6 +93,7 @@ export interface _SERVICE {
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'acceptFriendRequest' : ActorMethod<[Principal], undefined>,
+  'addBannedWord' : ActorMethod<[string], undefined>,
   'addComment' : ActorMethod<[bigint, string], undefined>,
   'addSharedNote' : ActorMethod<[bigint, string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
@@ -108,21 +109,31 @@ export interface _SERVICE {
   'deleteForumPost' : ActorMethod<[bigint], undefined>,
   'deletePost' : ActorMethod<[bigint], undefined>,
   'deletePostByAuthor' : ActorMethod<[bigint], undefined>,
+  'deleteStudyGroup' : ActorMethod<[bigint], undefined>,
+  'getAllComments' : ActorMethod<[], Array<Comment>>,
+  'getAllPosts' : ActorMethod<[], Array<Post>>,
   'getAllStudyGroups' : ActorMethod<[], Array<StudyGroup>>,
   'getAllUsers' : ActorMethod<[], Array<UserProfile>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getFeed' : ActorMethod<[], Array<Post>>,
+  'getPlatformStats' : ActorMethod<
+    [],
+    [bigint, bigint, bigint, bigint, bigint]
+  >,
   'getPostComments' : ActorMethod<[bigint], Array<Comment>>,
   'getReports' : ActorMethod<[], Array<Report>>,
   'getStudyGroup' : ActorMethod<[bigint], [] | [StudyGroup]>,
   'getStudyGroupMessages' : ActorMethod<[bigint], Array<StudyGroupMessage>>,
+  'getSuspendedUsers' : ActorMethod<[], Array<Principal>>,
   'getUserComments' : ActorMethod<[Principal], Array<Comment>>,
   'getUserPosts' : ActorMethod<[Principal], Array<Post>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'joinStudyGroup' : ActorMethod<[bigint], undefined>,
   'likePost' : ActorMethod<[bigint], undefined>,
+  'listBannedWords' : ActorMethod<[], Array<string>>,
+  'removeBannedWord' : ActorMethod<[string], undefined>,
   'reportContent' : ActorMethod<
     [[] | [Principal], [] | [string], string],
     undefined
@@ -137,9 +148,12 @@ export interface _SERVICE {
     undefined
   >,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'scanAndDeleteBannedGroups' : ActorMethod<[], undefined>,
   'sendFriendRequest' : ActorMethod<[Principal], undefined>,
   'sendMessage' : ActorMethod<[Principal, string], undefined>,
   'sendStudyGroupMessage' : ActorMethod<[bigint, string], undefined>,
+  'suspendUser' : ActorMethod<[Principal], undefined>,
+  'unsuspendUser' : ActorMethod<[Principal], undefined>,
   'updatePost' : ActorMethod<
     [
       bigint,

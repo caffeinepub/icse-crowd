@@ -25,6 +25,24 @@ export const UserRole = IDL.Variant({
   'guest' : IDL.Null,
 });
 export const ExternalBlob = IDL.Vec(IDL.Nat8);
+export const Time = IDL.Int;
+export const Comment = IDL.Record({
+  'id' : IDL.Nat,
+  'content' : IDL.Text,
+  'author' : IDL.Principal,
+  'timestamp' : Time,
+  'postId' : IDL.Nat,
+});
+export const Post = IDL.Record({
+  'id' : IDL.Nat,
+  'content' : IDL.Text,
+  'video' : IDL.Opt(ExternalBlob),
+  'author' : IDL.Principal,
+  'likes' : IDL.Vec(IDL.Principal),
+  'document' : IDL.Opt(ExternalBlob),
+  'timestamp' : Time,
+  'image' : IDL.Opt(ExternalBlob),
+});
 export const StudyGroup = IDL.Record({
   'id' : IDL.Nat,
   'creator' : IDL.Principal,
@@ -39,24 +57,6 @@ export const UserProfile = IDL.Record({
   'role' : UserRole,
   'email' : IDL.Text,
   'academicDetails' : IDL.Text,
-});
-export const Time = IDL.Int;
-export const Post = IDL.Record({
-  'id' : IDL.Nat,
-  'content' : IDL.Text,
-  'video' : IDL.Opt(ExternalBlob),
-  'author' : IDL.Principal,
-  'likes' : IDL.Vec(IDL.Principal),
-  'document' : IDL.Opt(ExternalBlob),
-  'timestamp' : Time,
-  'image' : IDL.Opt(ExternalBlob),
-});
-export const Comment = IDL.Record({
-  'id' : IDL.Nat,
-  'content' : IDL.Text,
-  'author' : IDL.Principal,
-  'timestamp' : Time,
-  'postId' : IDL.Nat,
 });
 export const Report = IDL.Record({
   'id' : IDL.Nat,
@@ -107,6 +107,7 @@ export const idlService = IDL.Service({
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'acceptFriendRequest' : IDL.Func([IDL.Principal], [], []),
+  'addBannedWord' : IDL.Func([IDL.Text], [], []),
   'addComment' : IDL.Func([IDL.Nat, IDL.Text], [], []),
   'addSharedNote' : IDL.Func([IDL.Nat, IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
@@ -128,11 +129,19 @@ export const idlService = IDL.Service({
   'deleteForumPost' : IDL.Func([IDL.Nat], [], []),
   'deletePost' : IDL.Func([IDL.Nat], [], []),
   'deletePostByAuthor' : IDL.Func([IDL.Nat], [], []),
+  'deleteStudyGroup' : IDL.Func([IDL.Nat], [], []),
+  'getAllComments' : IDL.Func([], [IDL.Vec(Comment)], []),
+  'getAllPosts' : IDL.Func([], [IDL.Vec(Post)], []),
   'getAllStudyGroups' : IDL.Func([], [IDL.Vec(StudyGroup)], ['query']),
   'getAllUsers' : IDL.Func([], [IDL.Vec(UserProfile)], []),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], []),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getFeed' : IDL.Func([], [IDL.Vec(Post)], []),
+  'getPlatformStats' : IDL.Func(
+      [],
+      [IDL.Nat, IDL.Nat, IDL.Nat, IDL.Nat, IDL.Nat],
+      [],
+    ),
   'getPostComments' : IDL.Func([IDL.Nat], [IDL.Vec(Comment)], []),
   'getReports' : IDL.Func([], [IDL.Vec(Report)], []),
   'getStudyGroup' : IDL.Func([IDL.Nat], [IDL.Opt(StudyGroup)], ['query']),
@@ -141,12 +150,15 @@ export const idlService = IDL.Service({
       [IDL.Vec(StudyGroupMessage)],
       ['query'],
     ),
+  'getSuspendedUsers' : IDL.Func([], [IDL.Vec(IDL.Principal)], []),
   'getUserComments' : IDL.Func([IDL.Principal], [IDL.Vec(Comment)], []),
   'getUserPosts' : IDL.Func([IDL.Principal], [IDL.Vec(Post)], []),
   'getUserProfile' : IDL.Func([IDL.Principal], [IDL.Opt(UserProfile)], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'joinStudyGroup' : IDL.Func([IDL.Nat], [], []),
   'likePost' : IDL.Func([IDL.Nat], [], []),
+  'listBannedWords' : IDL.Func([], [IDL.Vec(IDL.Text)], []),
+  'removeBannedWord' : IDL.Func([IDL.Text], [], []),
   'reportContent' : IDL.Func(
       [IDL.Opt(IDL.Principal), IDL.Opt(IDL.Text), IDL.Text],
       [],
@@ -165,9 +177,12 @@ export const idlService = IDL.Service({
       [],
     ),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'scanAndDeleteBannedGroups' : IDL.Func([], [], []),
   'sendFriendRequest' : IDL.Func([IDL.Principal], [], []),
   'sendMessage' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   'sendStudyGroupMessage' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'suspendUser' : IDL.Func([IDL.Principal], [], []),
+  'unsuspendUser' : IDL.Func([IDL.Principal], [], []),
   'updatePost' : IDL.Func(
       [
         IDL.Nat,
@@ -201,6 +216,24 @@ export const idlFactory = ({ IDL }) => {
     'guest' : IDL.Null,
   });
   const ExternalBlob = IDL.Vec(IDL.Nat8);
+  const Time = IDL.Int;
+  const Comment = IDL.Record({
+    'id' : IDL.Nat,
+    'content' : IDL.Text,
+    'author' : IDL.Principal,
+    'timestamp' : Time,
+    'postId' : IDL.Nat,
+  });
+  const Post = IDL.Record({
+    'id' : IDL.Nat,
+    'content' : IDL.Text,
+    'video' : IDL.Opt(ExternalBlob),
+    'author' : IDL.Principal,
+    'likes' : IDL.Vec(IDL.Principal),
+    'document' : IDL.Opt(ExternalBlob),
+    'timestamp' : Time,
+    'image' : IDL.Opt(ExternalBlob),
+  });
   const StudyGroup = IDL.Record({
     'id' : IDL.Nat,
     'creator' : IDL.Principal,
@@ -215,24 +248,6 @@ export const idlFactory = ({ IDL }) => {
     'role' : UserRole,
     'email' : IDL.Text,
     'academicDetails' : IDL.Text,
-  });
-  const Time = IDL.Int;
-  const Post = IDL.Record({
-    'id' : IDL.Nat,
-    'content' : IDL.Text,
-    'video' : IDL.Opt(ExternalBlob),
-    'author' : IDL.Principal,
-    'likes' : IDL.Vec(IDL.Principal),
-    'document' : IDL.Opt(ExternalBlob),
-    'timestamp' : Time,
-    'image' : IDL.Opt(ExternalBlob),
-  });
-  const Comment = IDL.Record({
-    'id' : IDL.Nat,
-    'content' : IDL.Text,
-    'author' : IDL.Principal,
-    'timestamp' : Time,
-    'postId' : IDL.Nat,
   });
   const Report = IDL.Record({
     'id' : IDL.Nat,
@@ -283,6 +298,7 @@ export const idlFactory = ({ IDL }) => {
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'acceptFriendRequest' : IDL.Func([IDL.Principal], [], []),
+    'addBannedWord' : IDL.Func([IDL.Text], [], []),
     'addComment' : IDL.Func([IDL.Nat, IDL.Text], [], []),
     'addSharedNote' : IDL.Func([IDL.Nat, IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
@@ -304,11 +320,19 @@ export const idlFactory = ({ IDL }) => {
     'deleteForumPost' : IDL.Func([IDL.Nat], [], []),
     'deletePost' : IDL.Func([IDL.Nat], [], []),
     'deletePostByAuthor' : IDL.Func([IDL.Nat], [], []),
+    'deleteStudyGroup' : IDL.Func([IDL.Nat], [], []),
+    'getAllComments' : IDL.Func([], [IDL.Vec(Comment)], []),
+    'getAllPosts' : IDL.Func([], [IDL.Vec(Post)], []),
     'getAllStudyGroups' : IDL.Func([], [IDL.Vec(StudyGroup)], ['query']),
     'getAllUsers' : IDL.Func([], [IDL.Vec(UserProfile)], []),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], []),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getFeed' : IDL.Func([], [IDL.Vec(Post)], []),
+    'getPlatformStats' : IDL.Func(
+        [],
+        [IDL.Nat, IDL.Nat, IDL.Nat, IDL.Nat, IDL.Nat],
+        [],
+      ),
     'getPostComments' : IDL.Func([IDL.Nat], [IDL.Vec(Comment)], []),
     'getReports' : IDL.Func([], [IDL.Vec(Report)], []),
     'getStudyGroup' : IDL.Func([IDL.Nat], [IDL.Opt(StudyGroup)], ['query']),
@@ -317,12 +341,15 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(StudyGroupMessage)],
         ['query'],
       ),
+    'getSuspendedUsers' : IDL.Func([], [IDL.Vec(IDL.Principal)], []),
     'getUserComments' : IDL.Func([IDL.Principal], [IDL.Vec(Comment)], []),
     'getUserPosts' : IDL.Func([IDL.Principal], [IDL.Vec(Post)], []),
     'getUserProfile' : IDL.Func([IDL.Principal], [IDL.Opt(UserProfile)], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'joinStudyGroup' : IDL.Func([IDL.Nat], [], []),
     'likePost' : IDL.Func([IDL.Nat], [], []),
+    'listBannedWords' : IDL.Func([], [IDL.Vec(IDL.Text)], []),
+    'removeBannedWord' : IDL.Func([IDL.Text], [], []),
     'reportContent' : IDL.Func(
         [IDL.Opt(IDL.Principal), IDL.Opt(IDL.Text), IDL.Text],
         [],
@@ -341,9 +368,12 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'scanAndDeleteBannedGroups' : IDL.Func([], [], []),
     'sendFriendRequest' : IDL.Func([IDL.Principal], [], []),
     'sendMessage' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'sendStudyGroupMessage' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'suspendUser' : IDL.Func([IDL.Principal], [], []),
+    'unsuspendUser' : IDL.Func([IDL.Principal], [], []),
     'updatePost' : IDL.Func(
         [
           IDL.Nat,
