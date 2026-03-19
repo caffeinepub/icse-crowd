@@ -495,6 +495,23 @@ export function useScanAndDeleteBannedGroups() {
   });
 }
 
+export function useDeleteGroupsWithWord() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (word: string): Promise<bigint> => {
+      if (!actor) throw new Error("Actor not available");
+      // deleteGroupsWithWord is a newer backend function; cast to any for compatibility
+      return (actor as any).deleteGroupsWithWord(word) as Promise<bigint>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["studyGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["platformStats"] });
+    },
+  });
+}
+
 export function useGetAllPosts() {
   const { actor, isFetching } = useActor();
 

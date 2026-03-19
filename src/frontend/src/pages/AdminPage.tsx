@@ -12,6 +12,7 @@ import {
   Plus,
   RefreshCw,
   Scan,
+  Search,
   Settings,
   Shield,
   Trash2,
@@ -56,6 +57,7 @@ import {
   useAdminDeleteComment,
   useAdminDeletePost,
   useAdminDeleteStudyGroup,
+  useDeleteGroupsWithWord,
   useGetAllComments,
   useGetAllPosts,
   useGetAllStudyGroups,
@@ -71,7 +73,7 @@ import {
   useUnsuspendUser,
 } from "../hooks/useQueries";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────────────────
 
 function shortPrincipal(p: Principal): string {
   const s = p.toString();
@@ -94,7 +96,7 @@ function errMsg(e: unknown, fallback: string): string {
   return (e instanceof Error ? e.message : null) || fallback;
 }
 
-// ─── Confirmation Dialog ──────────────────────────────────────────────────────
+// ─── Confirmation Dialog ──────────────────────────────────────────────────────────────────────
 
 interface ConfirmDialogProps {
   trigger: React.ReactNode;
@@ -164,7 +166,7 @@ function ConfirmDialog({
   );
 }
 
-// ─── Stats Tab ────────────────────────────────────────────────────────────────
+// ─── Stats Tab ────────────────────────────────────────────────────────────────────────────────
 
 function StatsTab() {
   const { data: stats, isLoading, isError, refetch } = useGetPlatformStats();
@@ -266,14 +268,16 @@ function StatsTab() {
   );
 }
 
-// ─── Banned Words Tab ─────────────────────────────────────────────────────────
+// ─── Banned Words Tab ─────────────────────────────────────────────────────────────────────────────
 
 function BannedWordsTab() {
   const [newWord, setNewWord] = useState("");
+  const [targetWord, setTargetWord] = useState("epistein");
   const { data: words, isLoading } = useListBannedWords();
   const addWord = useAddBannedWord();
   const removeWord = useRemoveBannedWord();
   const scanAndDelete = useScanAndDeleteBannedGroups();
+  const deleteGroupsWithWord = useDeleteGroupsWithWord();
 
   const handleAdd = async () => {
     const w = newWord.trim().toLowerCase();
@@ -302,6 +306,25 @@ function BannedWordsTab() {
       toast.success("Scan complete — offending groups deleted");
     } catch (e: unknown) {
       toast.error(errMsg(e, "Scan failed"));
+    }
+  };
+
+  const handleDeleteMatchingGroups = async () => {
+    const word = targetWord.trim();
+    if (!word) {
+      toast.error("Please enter a word to search for");
+      return;
+    }
+    try {
+      const count = await deleteGroupsWithWord.mutateAsync(word);
+      const n = Number(count);
+      toast.success(
+        n === 0
+          ? `No study groups found containing "${word}"`
+          : `Deleted ${n} study group${n !== 1 ? "s" : ""} containing "${word}"`,
+      );
+    } catch (e: unknown) {
+      toast.error(errMsg(e, "Failed to delete matching groups"));
     }
   };
 
@@ -334,6 +357,75 @@ function BannedWordsTab() {
           cancelOcid="admin.scan_delete.cancel_button"
         />
       </div>
+
+      {/* Targeted Group Deletion */}
+      <Card className="border-destructive/40">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-destructive" />
+            <CardTitle className="text-sm font-semibold">
+              Targeted Group Deletion
+            </CardTitle>
+          </div>
+          <CardDescription>
+            Delete all existing study groups whose name or description contains
+            a specific word (case-insensitive, partial match). Future groups
+            with this word are already blocked automatically.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1 space-y-1.5">
+              <label
+                htmlFor="target-word-input"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                Word to match (partial, case-insensitive)
+              </label>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="target-word-input"
+                  placeholder="e.g. epistein"
+                  value={targetWord}
+                  onChange={(e) => setTargetWord(e.target.value)}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && handleDeleteMatchingGroups()
+                  }
+                  className="pl-9"
+                  data-ocid="admin.targeted_deletion.input"
+                />
+              </div>
+            </div>
+            <ConfirmDialog
+              trigger={
+                <Button
+                  variant="destructive"
+                  className="gap-2 shrink-0"
+                  disabled={
+                    !targetWord.trim() || deleteGroupsWithWord.isPending
+                  }
+                  data-ocid="admin.targeted_deletion.delete_button"
+                >
+                  {deleteGroupsWithWord.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  Delete Matching Groups
+                </Button>
+              }
+              title="Delete Matching Study Groups"
+              description={`This will permanently delete ALL study groups whose name or description contains "${targetWord.trim()}". This action cannot be undone.`}
+              confirmLabel="Yes, delete them"
+              onConfirm={handleDeleteMatchingGroups}
+              dialogOcid="admin.targeted_deletion.dialog"
+              confirmOcid="admin.targeted_deletion.confirm_button"
+              cancelOcid="admin.targeted_deletion.cancel_button"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Add word */}
       <Card>
@@ -427,7 +519,7 @@ function BannedWordsTab() {
   );
 }
 
-// ─── Content Tab ──────────────────────────────────────────────────────────────
+// ─── Content Tab ─────────────────────────────────────────────────────────────────────────────────
 
 function ContentTab() {
   const { data: posts, isLoading: postsLoading } = useGetAllPosts();
@@ -707,7 +799,7 @@ function ContentTab() {
   );
 }
 
-// ─── Users Tab ────────────────────────────────────────────────────────────────
+// ─── Users Tab ─────────────────────────────────────────────────────────────────────────────────
 
 function UsersTab() {
   const { data: users, isLoading: usersLoading } = useGetAllUsers();
@@ -865,7 +957,7 @@ function UsersTab() {
   );
 }
 
-// ─── Reports Tab ──────────────────────────────────────────────────────────────
+// ─── Reports Tab ─────────────────────────────────────────────────────────────────────────────────
 
 function ReportsTab() {
   const { data: reports, isLoading } = useGetReports();
@@ -1044,7 +1136,7 @@ function ReportsTab() {
   );
 }
 
-// ─── AdminPage ────────────────────────────────────────────────────────────────
+// ─── AdminPage ────────────────────────────────────────────────────────────────────────────────────
 
 export default function AdminPage() {
   return (

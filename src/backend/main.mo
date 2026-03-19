@@ -197,6 +197,17 @@ actor {
     };
   };
 
+  // Runs automatically after each canister upgrade — purges groups with banned names
+  system func postupgrade() {
+    let groupsToCheck = studyGroups.values().toArray();
+    for (group in groupsToCheck.values()) {
+      if (group.name.toLower().contains(#text("epistein"))) {
+        studyGroups.remove(group.id);
+        studyGroupMessages.remove(group.id);
+      };
+    };
+  };
+
   public shared ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view profiles");
@@ -486,6 +497,8 @@ actor {
       "pervert",
       "penetrate",
       "pedo",
+      "epistein",
+      "pedophile",
       "prostitute",
       "prostitutes",
       "queer",
@@ -1204,6 +1217,22 @@ actor {
         studyGroups.remove(group.id);
       };
     };
+  };
+
+  public shared ({ caller }) func deleteGroupsWithWord(word : Text) : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    let lowerWord = word.toLower();
+    let groups = studyGroups.values().toArray();
+    var deleted = 0;
+    for (group in groups.values()) {
+      if (group.name.toLower().contains(#text(lowerWord)) or group.description.toLower().contains(#text(lowerWord))) {
+        studyGroups.remove(group.id);
+        deleted += 1;
+      };
+    };
+    deleted;
   };
 
   public shared ({ caller }) func getAllPosts() : async [Post] {
